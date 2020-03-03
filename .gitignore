@@ -1,0 +1,8 @@
+# build results
+artifacts/
+build/
+# clang junks
+.idea/
+cmake-build-debug/
+# macOS junk
+.DS_Store
