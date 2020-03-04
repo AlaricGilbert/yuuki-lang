@@ -1,8 +1,9 @@
 #ifndef YUUKI_SYNTAX_CONTEXT_H
 #define YUUKI_SYNTAX_CONTEXT_H
 
-#include <yuuki/compiler/feasy/token/token.h>
 #include <yuuki/compiler/feasy/code_postion.h>
+#include <yuuki/compiler/feasy/token/token.h>
+#include <yuuki/compiler/feasy/syntax/syntax_node.h>
 #include <string_view>
 #include <vector>
 namespace yuuki::compiler::feasy{

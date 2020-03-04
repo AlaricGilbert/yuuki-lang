@@ -6,4 +6,6 @@ namespace yuuki::compiler::feasy{
         _diagnostic = diagInfo;
         _tokenIndex = 0;
     }
+
+
 }

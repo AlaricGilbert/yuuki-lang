@@ -4,6 +4,9 @@
 #include <memory>
 #include <yuuki/compiler/diagnostics/diagnostic.h>
 #include <yuuki/compiler/feasy/syntax_context.h>
+#include <yuuki/compiler/feasy/syntax/binary_expression.h>
+#include <yuuki/compiler/feasy/syntax/identifier_expression.h>
+#include <yuuki/compiler/feasy/syntax/unary_expression.h>
 namespace yuuki::compiler::feasy{
     /**
      * Syntax analyser for yuuki language.
