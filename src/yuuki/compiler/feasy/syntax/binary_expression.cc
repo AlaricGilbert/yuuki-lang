@@ -1,11 +1,13 @@
 #include <yuuki/compiler/feasy/syntax/binary_expression.h>
-
+#include <yuuki/compiler/feasy/token/token_util.h>
 #include <utility>
+#include <rang/rang.h>
+#include <yuuki/compiler/feasy/syntax/unary_expression.h>
 
 namespace yuuki::compiler::feasy::syntax{
-    void BinaryExpression::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>)> &syntaxWalker) {
-        syntaxWalker(_left);
-        syntaxWalker(_right);
+    void BinaryExpression::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>,bool)> &syntaxWalker) {
+        syntaxWalker(_left, false);
+        syntaxWalker(_right, true);
     }
 
     BinaryExpression::BinaryExpression(const std::shared_ptr<Expression>& left, token::TokenType operatorType,
@@ -17,5 +19,23 @@ namespace yuuki::compiler::feasy::syntax{
 
     token::TokenType BinaryExpression::getOperatorType() {
         return _operatorType;
+    }
+
+    void BinaryExpression::writeCurrentInfo(std::ostream &s) {
+        if(s.rdbuf() == std::cout.rdbuf()){
+            s << rang::fg::gray     << "BinaryExpression "
+              << rang::fg::yellow   << "<" << this << "> "
+              << rang::style::bold  << rang::fg::reset
+              << '\'' << token::TokenUtil::getSpell(_operatorType) << '\''
+              << rang::style::reset << std::endl;
+        } else{
+            s << "BinaryExpression "
+              << "<" << this << "> "
+              << '\'' << token::TokenUtil::getSpell(_operatorType) << '\'' << std::endl;
+        }
+    }
+
+    void BinaryExpression::analyseType() {
+
     }
 }

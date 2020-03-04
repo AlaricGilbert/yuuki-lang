@@ -5,10 +5,8 @@
 namespace yuuki::compiler::feasy::syntax{
     class SyntaxTree: public SyntaxNode{
     public:
-        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>)> &syntaxWalker) override;
-        void add(const std::shared_ptr<SyntaxNode>& child);
-    private:
-        std::vector<std::shared_ptr<SyntaxNode>> _children;
+        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override = 0;
+        virtual void add(const std::shared_ptr<SyntaxNode>& child) = 0;
     };
 }
 #endif //YUUKI_SYNTAX_TREE_H

@@ -7,7 +7,9 @@ namespace yuuki::compiler::feasy::syntax{
     class IdentifierExpression: public Expression{
     public:
         explicit IdentifierExpression(const std::string& id);
-        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>)> &syntaxWalker) override;
+        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void writeCurrentInfo(std::ostream& ostream) override;
+        void analyseType() override;
         std::string getIDString();
     private:
         std::string _identifier;

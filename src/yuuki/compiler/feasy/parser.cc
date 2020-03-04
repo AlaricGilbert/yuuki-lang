@@ -6,6 +6,8 @@ namespace yuuki::compiler::feasy{
         _diagnostic = diagInfo;
         _tokenIndex = 0;
     }
+    std::shared_ptr<syntax::Expression> Parser::parseExpression() {
+    }
 
 
 }

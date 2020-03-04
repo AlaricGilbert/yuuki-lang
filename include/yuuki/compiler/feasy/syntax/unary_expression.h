@@ -8,7 +8,9 @@ namespace yuuki::compiler::feasy::syntax{
     public:
         UnaryExpression(token::TokenType operatorType, const std::shared_ptr<Expression>& right);
         token::TokenType getOperatorType();
-        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>)> &syntaxWalker) override;
+        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void writeCurrentInfo(std::ostream &ostream) override;
+        void analyseType() override;
     private:
         token::TokenType _operatorType;
         std::shared_ptr<Expression> _right;

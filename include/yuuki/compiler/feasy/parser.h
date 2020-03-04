@@ -19,6 +19,8 @@ namespace yuuki::compiler::feasy{
          * @param diagInfo: the diagnostic info collector to report errors to
          */
         Parser(const std::shared_ptr<SyntaxContext> &context, const std::shared_ptr<diagnostics::Diagnostic> &diagInfo);
+        
+        std::shared_ptr<syntax::Expression> parseExpression();
     private:
         // copy of the context
         std::shared_ptr<SyntaxContext> _context ;
