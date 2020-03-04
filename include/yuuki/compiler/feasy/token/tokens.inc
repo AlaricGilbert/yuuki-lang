@@ -64,8 +64,6 @@ PUNCTUATOR(l_brace,       "{")
 PUNCTUATOR(r_brace,       "}")
 PUNCTUATOR(comma,         ",")
 PUNCTUATOR(semi,          ";")
-PUNCTUATOR(tilde,         "~")
-
 
 // operator definations
 OPERATOR(amp,           "&")
