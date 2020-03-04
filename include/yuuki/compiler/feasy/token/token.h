@@ -12,7 +12,7 @@ namespace yuuki::compiler::feasy::token{
         /**
          * The type of the token.
          */
-        TokenType        type = undefined;
+        TokenType        type = TokenType::undefined;
         /**
          * The relative position, compared to the start of the code.
          */

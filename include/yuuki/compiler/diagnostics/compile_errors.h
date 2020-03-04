@@ -2,7 +2,7 @@
 #define YUUKI_COMPILE_ERRORS_H
 namespace yuuki::compiler::diagnostics{
     // Pre-defined compile errors for yuuki compiler.
-    enum CompileError{
+    enum class CompileError{
         // YK1000-1999: lexical errors
         UnexpectedChars = 1000,
         StringNotClosed = 1001,

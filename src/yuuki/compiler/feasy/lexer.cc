@@ -19,7 +19,7 @@ namespace yuuki::compiler::feasy{
         // returns a eof token when lexer reaches the end of the code string_view
         if (_position + 1 >= _code.size()) {
             auto token = std::make_unique<token::Token>();
-            token->type = token::eof;
+            token->type = token::TokenType::eof;
             token->offset = _position;
             token->rawCode = _code.substr(_position, 1);
             _context->tokens.push_back(std::move(token));
@@ -88,14 +88,14 @@ namespace yuuki::compiler::feasy{
         // neither of the situation is satisfied return error
 
         auto token = std::make_unique<token::Token>();
-        token->type = token::unknown;
+        token->type = token::TokenType::unknown;
         token->offset = _position;
         while (!isCurrCharSplitter())
             _position++;
         token->rawCode = _code.substr(_position, _position - token->offset - 1);
         _context->tokens.push_back(std::move(token));
         // push error
-        _diagnostic->errorAt(diagnostics::UnexpectedChars,
+        _diagnostic->errorAt(diagnostics::CompileError::UnexpectedChars,
                              _context->syntaxID,
                              _context->tokens.size() - 1,
                              "unexpected characters");
@@ -105,7 +105,7 @@ namespace yuuki::compiler::feasy{
     bool Lexer::lexStringConst() {
         auto token = std::make_unique<token::Token>();
         token->offset = _position;
-        token->type = token::string_const;
+        token->type = token::TokenType::string_const;
         size_t startPos = _position;
 
         bool escaped = false;
@@ -149,7 +149,7 @@ namespace yuuki::compiler::feasy{
                         token->rawCode = _code.substr(startPos,_position - startPos);
                         _context->tokens.push_back(std::move(token));
                         _position++;
-                        _diagnostic->errorAt(diagnostics::StringNotClosed,
+                        _diagnostic->errorAt(diagnostics::CompileError::StringNotClosed,
                                              _context->syntaxID,
                                              _context->tokens.size() - 1,
                                              "string not closed");
@@ -170,7 +170,7 @@ namespace yuuki::compiler::feasy{
         // instantly form the token result and push an error to the diagnostic
         token->rawCode = _code.substr(startPos,_position - startPos);
         _context->tokens.push_back(std::move(token));
-        _diagnostic->errorAt(diagnostics::StringNotClosed,
+        _diagnostic->errorAt(diagnostics::CompileError::StringNotClosed,
                              _context->syntaxID,
                              _context->tokens.size() - 1,
                              "string not closed");
@@ -179,7 +179,7 @@ namespace yuuki::compiler::feasy{
 
     bool Lexer::lexNumericConst() {
         auto token = std::make_unique<token::Token>();
-        token->type = token::numeric_const;
+        token->type = token::TokenType::numeric_const;
         token->offset = _position;
 
         // there are few types of numeric token
@@ -230,7 +230,7 @@ namespace yuuki::compiler::feasy{
                         // form the result and push the error to the diagnostic info
                         token->rawCode = _code.substr(_position, _position - startPos - 1);
                         _context->tokens.push_back(std::move(token));
-                        _diagnostic->errorAt(diagnostics::InvalidNumericConst,
+                        _diagnostic->errorAt(diagnostics::CompileError::InvalidNumericConst,
                                              _context->syntaxID,
                                              _context->tokens.size() - 1,
                                              "invalid numeric const");
@@ -327,7 +327,7 @@ namespace yuuki::compiler::feasy{
 
         // get if the identifier have already been a keyword of yuuki language
         token::TokenType type = token::TokenUtil::getType(std::string(token->rawCode));
-        token->type = type == token::unknown ? token::identifier : type;
+        token->type = type == token::TokenType::unknown ? token::TokenType::identifier : type;
         _position += offset;
         _context->tokens.push_back(std::move(token));
         return true;
@@ -358,7 +358,7 @@ namespace yuuki::compiler::feasy{
         size_t startPos = _position;
 
         auto token = std::make_unique<token::Token>();
-        token->type = token::inline_comment;
+        token->type = token::TokenType::inline_comment;
         token->offset = startPos;
         // when we haven't met line switch before end of file
         while (_position < _code.size()) {
@@ -377,7 +377,7 @@ namespace yuuki::compiler::feasy{
     bool Lexer::lexInterlineComment() {
         size_t startPos = _position;
         auto token = std::make_unique<token::Token>();
-        token->type = token::interline_comment;
+        token->type = token::TokenType::interline_comment;
         token->offset = startPos;
         _position += 2;
         // when we haven't met the char before the last char
@@ -398,7 +398,7 @@ namespace yuuki::compiler::feasy{
         // form the result and push the error to the diagnostic
         token->rawCode = _code.substr(startPos, _position - startPos);
         _context->tokens.push_back(std::move(token));
-        _diagnostic->errorAt(diagnostics::InterlineCommentNotClosed,
+        _diagnostic->errorAt(diagnostics::CompileError::InterlineCommentNotClosed,
                              _context->syntaxID,
                              _context->tokens.size() - 1,
                              "interline comment not closed");

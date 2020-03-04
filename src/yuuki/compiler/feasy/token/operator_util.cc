@@ -2,6 +2,6 @@
 namespace yuuki::compiler::feasy::token{
     OperatorUtil::OpType OperatorUtil::getType(TokenType t) {
         // not implemented
-        return primary;
+        return OpType::primary;
     }
 }

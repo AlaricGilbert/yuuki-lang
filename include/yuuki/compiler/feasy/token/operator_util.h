@@ -8,7 +8,7 @@ namespace yuuki::compiler::feasy::token {
     private:
         OperatorUtil() = delete; /* NOLINT */
     public:
-        enum OpType{
+        enum class OpType{
             primary = 1,
             unary = 2,
             multiplicative = 3,
