@@ -23,9 +23,9 @@ namespace yuuki::compiler::feasy::syntax{
         if(s.rdbuf() == std::cout.rdbuf()){
             s << rang::fg::gray     << "UnaryExpression "
               << rang::fg::yellow   << "<" << this << "> "
-              << rang::style::bold  << rang::fg::reset
+              << rang::fg::green
               << '\'' << token::TokenUtil::getSpell(_operatorType) << '\''
-              << rang::style::reset << std::endl;
+              << rang::fg::reset <<std::endl;
         } else{
             s << "UnaryExpression "
               << "<" << this << "> "
