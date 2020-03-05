@@ -26,4 +26,8 @@ namespace yuuki::compiler::feasy::syntax{
     SyntaxType BlockStatement::getType() {
         return SyntaxType::BlockStatement;
     }
+
+    bool BlockStatement::hasChild() {
+        return !_children.empty();
+    }
 }

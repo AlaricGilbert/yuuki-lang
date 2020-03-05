@@ -30,6 +30,10 @@ namespace yuuki::compiler::feasy::syntax{
         return SyntaxType::IdentifierName;
     }
 
+    bool IdentifierName::hasChild() {
+        return false;
+    }
+
 
     QualifiedName::QualifiedName(const std::shared_ptr<Name> &left, const std::shared_ptr<IdentifierName> &right) {
         _left = left;
@@ -60,6 +64,10 @@ namespace yuuki::compiler::feasy::syntax{
 
     SyntaxType QualifiedName::getType() {
         return SyntaxType::QualifiedName;
+    }
+
+    bool QualifiedName::hasChild() {
+        return true;
     }
 
 }

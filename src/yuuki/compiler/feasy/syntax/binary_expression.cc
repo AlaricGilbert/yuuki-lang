@@ -42,4 +42,8 @@ namespace yuuki::compiler::feasy::syntax{
     SyntaxType BinaryExpression::getType() {
         return SyntaxType::BinaryExpression;
     }
+
+    bool BinaryExpression::hasChild() {
+        return true;
+    }
 }

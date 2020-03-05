@@ -40,4 +40,8 @@ namespace yuuki::compiler::feasy::syntax{
     SyntaxType UnaryExpression::getType() {
         return SyntaxType::UnaryExpression;
     }
+
+    bool UnaryExpression::hasChild() {
+        return true;
+    }
 }

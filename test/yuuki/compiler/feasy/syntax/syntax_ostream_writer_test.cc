@@ -54,7 +54,8 @@ TEST(SyntaxOStreamWriter,writeTest){
     auto inherits = std::make_shared<InheritDeclaration>();
     inherits->addInheritType(type3);
     inherits->addInheritType(type4);
-    auto class1 = std::make_shared<ClassDeclaration>(id4,inherits,gene);
+    auto mod = std::make_shared<ModifierBag>();
+    auto class1 = std::make_shared<ClassDeclaration>(mod,id4,inherits,gene);
     SyntaxOStreamWriter::writeTo(std::cout,class1);
 
 }

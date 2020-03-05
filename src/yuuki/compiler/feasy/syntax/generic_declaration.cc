@@ -26,4 +26,8 @@ namespace yuuki::compiler::feasy::syntax{
     SyntaxType GenericDeclaration::getType() {
         return SyntaxType::GenericDeclaration;
     }
+
+    bool GenericDeclaration::hasChild() {
+        return !_genericNames.empty();
+    }
 }

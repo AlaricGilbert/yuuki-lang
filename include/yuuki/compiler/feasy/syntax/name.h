@@ -8,6 +8,7 @@ namespace yuuki::compiler::feasy::syntax{
         void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>,bool)>& syntaxWalker) override = 0;
         void writeCurrentInfo(std::ostream& ostream) override = 0;
         SyntaxType getType() override = 0;
+        bool hasChild() override = 0;
         virtual std::string toString() = 0;
     };
     class IdentifierName: public Name{
@@ -16,6 +17,7 @@ namespace yuuki::compiler::feasy::syntax{
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream& ostream) override;
         SyntaxType getType() override ;
+        bool hasChild() override ;
         std::string toString() override;
     private:
         std::string _identifier;
@@ -27,6 +29,7 @@ namespace yuuki::compiler::feasy::syntax{
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream& ostream) override;
         SyntaxType getType() override ;
+        bool hasChild() override ;
         std::string toString() override;
     private:
         std::shared_ptr<Name> _left;

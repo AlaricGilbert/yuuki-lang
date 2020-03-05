@@ -7,6 +7,11 @@
 #include <memory>
 namespace yuuki::compiler::feasy::syntax{
     enum class SyntaxType{
+        ImportDirective,
+
+        ModifierMark,
+        ModifierBag,
+
         BlockStatement,
 
         ClassDeclaration,
@@ -28,6 +33,7 @@ namespace yuuki::compiler::feasy::syntax{
         virtual void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>,bool)>& syntaxWalker) = 0;
         virtual void writeCurrentInfo(std::ostream& ostream) = 0;
         virtual SyntaxType getType() = 0;
+        virtual bool hasChild() = 0;
         virtual ~SyntaxNode() = default;
     };
 }

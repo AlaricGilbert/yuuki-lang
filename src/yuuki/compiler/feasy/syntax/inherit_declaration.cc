@@ -26,4 +26,8 @@ namespace yuuki::compiler::feasy::syntax{
     SyntaxType InheritDeclaration::getType() {
         return SyntaxType::InheritDeclaration;
     }
+
+    bool InheritDeclaration::hasChild() {
+        return !_inheritInfos.empty();
+    }
 }

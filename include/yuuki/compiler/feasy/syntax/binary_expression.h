@@ -12,6 +12,7 @@ namespace yuuki::compiler::feasy::syntax{
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>,bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream& ostream) override;
         SyntaxType getType() override ;
+        bool hasChild() override ;
         void analyseType() override;
 
     private:

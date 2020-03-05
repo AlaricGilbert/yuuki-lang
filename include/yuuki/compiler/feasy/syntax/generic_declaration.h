@@ -7,6 +7,7 @@ namespace yuuki::compiler::feasy::syntax{
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream& ostream) override;
         void addGenericType(const std::shared_ptr<Name> &genericName);
+        bool hasChild() override ;
         SyntaxType getType() override ;
 
     private:

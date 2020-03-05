@@ -32,6 +32,10 @@ namespace yuuki::compiler::feasy::syntax{
         return SyntaxType::TrivialType;
     }
 
+    bool TrivialType::hasChild() {
+        return false;
+    }
+
     GenericType::GenericType(const std::shared_ptr<Name> &typeName) {
         _typeName = typeName;
     }
@@ -74,6 +78,10 @@ namespace yuuki::compiler::feasy::syntax{
         return SyntaxType::GenericType;
     }
 
+    bool GenericType::hasChild() {
+        return true;
+    }
+
     ArrayType::ArrayType(const std::shared_ptr<Type> &type) {
         _childType = type;
     }
@@ -101,5 +109,9 @@ namespace yuuki::compiler::feasy::syntax{
 
     SyntaxType ArrayType::getType() {
         return SyntaxType::ArrayType;
+    }
+
+    bool ArrayType::hasChild() {
+        return true;
     }
 }
