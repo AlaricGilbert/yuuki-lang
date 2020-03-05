@@ -10,7 +10,7 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     UnaryExpression::UnaryExpression(token::TokenType operatorType,
-                                     const std::shared_ptr<Expression>& right) {
+                                     const std::shared_ptr<SyntaxNode>& right) {
         _right = right;
         _operatorType = operatorType;
     }
@@ -35,5 +35,9 @@ namespace yuuki::compiler::feasy::syntax{
 
     void UnaryExpression::analyseType() {
 
+    }
+
+    SyntaxType UnaryExpression::getType() {
+        return SyntaxType::UnaryExpression;
     }
 }

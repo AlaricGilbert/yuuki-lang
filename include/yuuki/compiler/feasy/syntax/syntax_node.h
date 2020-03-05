@@ -6,10 +6,28 @@
 #include <iostream>
 #include <memory>
 namespace yuuki::compiler::feasy::syntax{
+    enum class SyntaxType{
+        BlockStatement,
+
+        ClassDeclaration,
+        GenericDeclaration,
+        InheritDeclaration,
+        MethodDeclaration,
+
+        IdentifierName,
+        QualifiedName,
+        TrivialType,
+        ArrayType,
+        GenericType,
+
+        BinaryExpression,
+        UnaryExpression
+    };
     class SyntaxNode{
     public:
         virtual void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>,bool)>& syntaxWalker) = 0;
         virtual void writeCurrentInfo(std::ostream& ostream) = 0;
+        virtual SyntaxType getType() = 0;
         virtual ~SyntaxNode() = default;
     };
 }

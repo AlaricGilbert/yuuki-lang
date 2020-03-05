@@ -3,7 +3,12 @@
 
 #include <yuuki/compiler/feasy/code_postion.h>
 #include <yuuki/compiler/feasy/token/token.h>
-#include <yuuki/compiler/feasy/syntax/syntax_tree.h>
+#include <yuuki/compiler/feasy/syntax/binary_expression.h>
+#include <yuuki/compiler/feasy/syntax/block_statement.h>
+#include <yuuki/compiler/feasy/syntax/class_declaration.h>
+#include <yuuki/compiler/feasy/syntax/name.h>
+#include <yuuki/compiler/feasy/syntax/method_declaration.h>
+#include <yuuki/compiler/feasy/syntax/unary_expression.h>
 #include <string_view>
 #include <vector>
 namespace yuuki::compiler::feasy{

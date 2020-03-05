@@ -4,7 +4,6 @@
 namespace yuuki::compiler::feasy::syntax{
 
     void BlockStatement::add(const std::shared_ptr<SyntaxNode> &child) {
-        //_children.push_back(std::dynamic_pointer_cast<Statement>(child));
         _children.push_back(child);
     }
 
@@ -22,5 +21,9 @@ namespace yuuki::compiler::feasy::syntax{
         for(size_t id = 0; id < _children.size();id++){
             syntaxWalker(_children[id], id == _children.size() - 1);
         }
+    }
+
+    SyntaxType BlockStatement::getType() {
+        return SyntaxType::BlockStatement;
     }
 }

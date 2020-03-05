@@ -6,14 +6,15 @@
 namespace yuuki::compiler::feasy::syntax{
     class UnaryExpression: public Expression{
     public:
-        UnaryExpression(token::TokenType operatorType, const std::shared_ptr<Expression>& right);
+        UnaryExpression(token::TokenType operatorType, const std::shared_ptr<SyntaxNode>& right);
         token::TokenType getOperatorType();
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream &ostream) override;
+        SyntaxType getType() override ;
         void analyseType() override;
     private:
         token::TokenType _operatorType;
-        std::shared_ptr<Expression> _right;
+        std::shared_ptr<SyntaxNode> _right;
     };
 }
 #endif //YUUKI_UNARY_EXPRESSION_H
