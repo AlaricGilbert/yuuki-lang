@@ -243,5 +243,5 @@ namespace yuuki.test.foo {
             EXPECT_EQ(literal_vars[j++], (std::string)context->tokens[i]->rawCode);
         }
     }
-    std::cout << d;
+    std::cout << *d;
 }
