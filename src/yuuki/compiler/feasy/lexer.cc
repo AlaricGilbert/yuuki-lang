@@ -1,10 +1,15 @@
 #include "yuuki/compiler/feasy/lexer.h"
 #include "yuuki/compiler/feasy/token/token_util.h"
+#include <yuuki/compiler/diagnostics/diagnostic_builder.h>
+
 namespace yuuki::compiler::feasy{
 
-    Lexer::Lexer(const std::shared_ptr<SyntaxContext> &context, const std::shared_ptr<diagnostics::Diagnostic> &diagnostic) {
+    using namespace diagnostics;
+    using namespace token;
+    Lexer::Lexer(const std::shared_ptr<SyntaxContext> &context,
+            const std::shared_ptr<diagnostics::DiagnosticStream> &diagnostiStream) {
         _context = context;
-        _diagnostic = diagnostic;
+        _diagnosticStream = diagnostiStream;
         _code = context->code;
         _position = 0;
         _eof = false;
@@ -95,10 +100,11 @@ namespace yuuki::compiler::feasy{
         token->rawCode = _code.substr(_position, _position - token->offset - 1);
         _context->tokens.push_back(std::move(token));
         // push error
-        _diagnostic->errorAt(diagnostics::CompileError::UnexpectedChars,
-                             _context->syntaxID,
-                             _context->tokens.size() - 1,
-                             "unexpected characters");
+        _diagnosticStream << DiagnosticBuilder::
+                             build(CompileError::UnexpectedChars,_context->syntaxID)
+                            .after(_context->tokens.size()-1)
+                            .message("unexpected characters")
+                            .build();
         return false;
     }
 
@@ -149,10 +155,11 @@ namespace yuuki::compiler::feasy{
                         token->rawCode = _code.substr(startPos,_position - startPos);
                         _context->tokens.push_back(std::move(token));
                         _position++;
-                        _diagnostic->errorAt(diagnostics::CompileError::StringNotClosed,
-                                             _context->syntaxID,
-                                             _context->tokens.size() - 1,
-                                             "string not closed");
+                        _diagnosticStream << DiagnosticBuilder::
+                                             build(CompileError::StringNotClosed,_context->syntaxID)
+                                            .after(_context->tokens.size()-1)
+                                            .message("string not closed")
+                                            .build();
                         return false;
                     }
                     // when the new-line symbol is escaped, set escaped variable to false
@@ -170,10 +177,11 @@ namespace yuuki::compiler::feasy{
         // instantly form the token result and push an error to the diagnostic
         token->rawCode = _code.substr(startPos,_position - startPos);
         _context->tokens.push_back(std::move(token));
-        _diagnostic->errorAt(diagnostics::CompileError::StringNotClosed,
-                             _context->syntaxID,
-                             _context->tokens.size() - 1,
-                             "string not closed");
+        _diagnosticStream << DiagnosticBuilder::
+                             build(CompileError::StringNotClosed,_context->syntaxID)
+                            .after(_context->tokens.size()-1)
+                            .message("string not closed")
+                            .build();
         return false;
     }
 
@@ -230,10 +238,11 @@ namespace yuuki::compiler::feasy{
                         // form the result and push the error to the diagnostic info
                         token->rawCode = _code.substr(_position, _position - startPos - 1);
                         _context->tokens.push_back(std::move(token));
-                        _diagnostic->errorAt(diagnostics::CompileError::InvalidNumericConst,
-                                             _context->syntaxID,
-                                             _context->tokens.size() - 1,
-                                             "invalid numeric const");
+                        _diagnosticStream << DiagnosticBuilder::
+                                             build(CompileError::InvalidNumericConst,_context->syntaxID)
+                                            .after(_context->tokens.size()-1)
+                                            .message("invalid numeric const")
+                                            .build();
                         return false;
                 }
             }
@@ -398,11 +407,11 @@ namespace yuuki::compiler::feasy{
         // form the result and push the error to the diagnostic
         token->rawCode = _code.substr(startPos, _position - startPos);
         _context->tokens.push_back(std::move(token));
-        _diagnostic->errorAt(diagnostics::CompileError::InterlineCommentNotClosed,
-                             _context->syntaxID,
-                             _context->tokens.size() - 1,
-                             "interline comment not closed");
-
+        _diagnosticStream << DiagnosticBuilder::
+                             build(CompileError::InterlineCommentNotClosed,_context->syntaxID)
+                            .after(_context->tokens.size()-1)
+                            .message("interline comment not closed")
+                            .build();
         return false;
     }
 

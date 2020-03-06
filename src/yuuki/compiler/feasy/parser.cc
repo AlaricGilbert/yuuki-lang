@@ -2,9 +2,9 @@
 namespace yuuki::compiler::feasy{
     using namespace yuuki::compiler::feasy::token;
     Parser::Parser(const std::shared_ptr <SyntaxContext> &context,
-                   const std::shared_ptr <diagnostics::Diagnostic> &diagInfo) {
+                   const std::shared_ptr <diagnostics::DiagnosticStream> &diagStream) {
         _context = context;
-        _diagnostic = diagInfo;
+        _diagnosticStream = diagStream;
         _tokenIndex = 0;
     }
     std::shared_ptr<syntax::Expression> Parser::parseExpression() {

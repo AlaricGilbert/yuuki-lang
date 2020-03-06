@@ -1,7 +1,7 @@
 #ifndef YUUKI_LEXER_H
 #define YUUKI_LEXER_H
 
-#include <yuuki/compiler/diagnostics/diagnostic.h>
+#include <yuuki/compiler/diagnostics/diagnostic_stream.h>
 #include <yuuki/compiler/feasy/token/token.h>
 #include <yuuki/compiler/feasy/syntax_context.h>
 #include <string_view>
@@ -19,9 +19,10 @@ namespace yuuki::compiler::feasy{
          * member 'code' of the given parameter 'context'. Result of accessing to context's tokens should be unexpected
          * after the content of the code have been collected.
          * @param context:  the compile context during lexical analyse and syntax analyse
-         * @param diagInfo: the diagnostic info collector to report errors to
+         * @param diagnosticStream: the diagnostic info collector to report errors to
          */
-        explicit Lexer(const std::shared_ptr<SyntaxContext> &context, const std::shared_ptr<diagnostics::Diagnostic> &diagInfo);
+        explicit Lexer(const std::shared_ptr<SyntaxContext> &context,
+                const std::shared_ptr<diagnostics::DiagnosticStream> &diagnosticStream);
 
         /**
          * Lex all tokens from given code string and store all into context.
@@ -35,7 +36,7 @@ namespace yuuki::compiler::feasy{
         // copy of the context
         std::shared_ptr<SyntaxContext> _context ;
         // copy of the diagnostic info collector
-        std::shared_ptr<diagnostics::Diagnostic> _diagnostic;
+        std::shared_ptr<diagnostics::DiagnosticStream> _diagnosticStream;
         // current relative position to the first char in the _code variable
         size_t _position;
         // marks if the lexer had met the end of the code file
