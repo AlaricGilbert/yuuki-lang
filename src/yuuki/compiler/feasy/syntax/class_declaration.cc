@@ -5,7 +5,7 @@
 
 namespace yuuki::compiler::feasy::syntax{
 
-    ClassDeclaration::ClassDeclaration(const std::shared_ptr<ModifierBag> &mod,
+    ClassDeclaration::ClassDeclaration(const std::shared_ptr<ModifierList> &mod,
                                        const std::shared_ptr<Name> &name,
                                        const std::shared_ptr<InheritDeclaration> &inheritInfos,
                                        const std::shared_ptr<GenericDeclaration> &genericInfos) {
@@ -15,10 +15,13 @@ namespace yuuki::compiler::feasy::syntax{
         _genericInfos = genericInfos;
     }
 
-    void ClassDeclaration::add(const std::shared_ptr<SyntaxNode> &member) {
-        _members.push_back(member);
+    void ClassDeclaration::add(const std::shared_ptr<MethodDeclaration> &method) {
+        _members.push_back(method);
     }
 
+    void ClassDeclaration::add(const std::shared_ptr<FieldDeclaration> &field) {
+        _members.push_back(field);
+    }
     void ClassDeclaration::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
         syntaxWalker(_name, false);
         if(_mod->hasChild())
@@ -73,5 +76,34 @@ namespace yuuki::compiler::feasy::syntax{
 
     bool ClassDeclaration::hasChild() {
         return true;
+    }
+
+    void FieldDeclaration::add(const std::shared_ptr<Expression> &declExpr) {
+        _fieldDeclExprs.push_back(declExpr);
+    }
+
+    void FieldDeclaration::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+        for(std::size_t i = 0; i < _fieldDeclExprs.size();i++){
+            syntaxWalker(_fieldDeclExprs[i],i==_fieldDeclExprs.size() - 1);
+        }
+    }
+
+    void FieldDeclaration::writeCurrentInfo(std::ostream &s) {
+        if(s.rdbuf() == std::cout.rdbuf()){
+            s << rang::fg::gray     << "FieldDeclaration "
+              << rang::fg::yellow   << "<" << this << "> "
+              << rang::fg::reset    << std::endl;
+        } else{
+            s << "FieldDeclaration "
+              << "<" << this << "> " << std::endl;
+        }
+    }
+
+    bool FieldDeclaration::hasChild() {
+        return !_fieldDeclExprs.empty();
+    }
+
+    SyntaxType FieldDeclaration::getType() {
+        return SyntaxType::FieldDeclaration;
     }
 }

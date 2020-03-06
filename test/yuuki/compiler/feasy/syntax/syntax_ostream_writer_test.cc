@@ -7,7 +7,6 @@
 #include <yuuki/compiler/feasy/token/token_type.h>
 #include <yuuki/compiler/feasy/syntax/syntax_ostream_writer.h>
 #include <memory>
-#include <sstream>
 #include <yuuki/compiler/feasy/syntax/class_declaration.h>
 
 TEST(SyntaxOStreamWriter,writeTest){
@@ -19,26 +18,18 @@ TEST(SyntaxOStreamWriter,writeTest){
     auto id2 = std::make_shared<IdentifierName>("identifier2");
     auto id3 = std::make_shared<IdentifierName>("identifier3");
     auto id4 = std::make_shared<IdentifierName>("identifier4");
-    auto unary1 = std::make_shared<UnaryExpression>(TokenType::op_minus,id1);
+    auto name1 = std::make_shared<NameExpression>(id1);
+    auto name2 = std::make_shared<NameExpression>(id1);
+    auto name3 = std::make_shared<NameExpression>(id1);
+    auto name4 = std::make_shared<NameExpression>(id1);
+    auto unary1 = std::make_shared<UnaryExpression>(TokenType::op_minus,name1);
     block->add(unary1);
-    auto unary2 = std::make_shared<UnaryExpression>(TokenType::op_tilde,id2);
-    auto binary = std::make_shared<BinaryExpression>(id3,TokenType::op_minus,unary2);
+    auto unary2 = std::make_shared<UnaryExpression>(TokenType::op_tilde,name2);
+    auto binary = std::make_shared<BinaryExpression>(name3,TokenType::op_minus,unary2);
     block->add(binary);
-    block->add(id4);
-    SyntaxOStreamWriter::writeTo(std::cout,std::dynamic_pointer_cast<SyntaxTree>(block));
-    std::ostringstream actual;
-    std::ostringstream target;
-    SyntaxOStreamWriter::writeTo(actual,std::dynamic_pointer_cast<SyntaxTree>(block));
+    block->add(name4);
+    SyntaxOStreamWriter::writeTo(std::cout,block);
 
-    target << "BlockStatement <"<< block << "> \n"
-           << "|-UnaryExpression <"<< unary1 << "> '-'\n"
-           << "| `-IdentifierName <"<< id1 <<"> 'identifier1'\n"
-           << "|-BinaryExpression <"<<binary<< "> '-'\n"
-           << "| |-IdentifierName <"<< id3 <<"> 'identifier3'\n"
-           << "| `-UnaryExpression <"<<unary2<<"> '~'\n"
-           << "|   `-IdentifierName <"<<id2<<"> 'identifier2'\n"
-           << "`-IdentifierName <"<<id4<<"> 'identifier4'\n";
-    EXPECT_EQ(actual.str(),target.str());
     auto type1 = std::make_shared<TrivialType>(id1);
     auto type2 = std::make_shared<ArrayType>(type1);
     auto type3 = std::make_shared<GenericType>(id2);
@@ -54,7 +45,7 @@ TEST(SyntaxOStreamWriter,writeTest){
     auto inherits = std::make_shared<InheritDeclaration>();
     inherits->addInheritType(type3);
     inherits->addInheritType(type4);
-    auto mod = std::make_shared<ModifierBag>();
+    auto mod = std::make_shared<ModifierList>();
     auto class1 = std::make_shared<ClassDeclaration>(mod,id4,inherits,gene);
     SyntaxOStreamWriter::writeTo(std::cout,class1);
 

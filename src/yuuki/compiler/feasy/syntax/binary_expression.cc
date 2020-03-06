@@ -10,8 +10,8 @@ namespace yuuki::compiler::feasy::syntax{
         syntaxWalker(_right, true);
     }
 
-    BinaryExpression::BinaryExpression(const std::shared_ptr<SyntaxNode>& left, token::TokenType operatorType,
-                                       const std::shared_ptr<SyntaxNode>& right) {
+    BinaryExpression::BinaryExpression(const std::shared_ptr<Expression>& left, token::TokenType operatorType,
+                                       const std::shared_ptr<Expression>& right) {
         _left = left;
         _right = right;
         _operatorType = operatorType;

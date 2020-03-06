@@ -1,4 +1,4 @@
-#include <yuuki/compiler/feasy/syntax/modifier_bag.h>
+#include <yuuki/compiler/feasy/syntax/modifier_list.h>
 #include <rang/rang.h>
 #include <yuuki/compiler/feasy/token/token_util.h>
 
@@ -38,31 +38,31 @@ namespace yuuki::compiler::feasy::syntax {
         return token::TokenUtil::getSpell(_type);
     }
 
-    void ModifierBag::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+    void ModifierList::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
         for (std::size_t i = 0; i < _marks.size(); ++i) {
             syntaxWalker(_marks[i], i == _marks.size() - 1);
         }
     }
 
-    void ModifierBag::writeCurrentInfo(std::ostream &s) {
+    void ModifierList::writeCurrentInfo(std::ostream &s) {
         if(s.rdbuf() == std::cout.rdbuf()){
-            s << rang::fg::gray     << "ModifierBag "
+            s << rang::fg::gray     << "ModifierList "
               << rang::fg::yellow   << "<" << this << "> " << std::endl;
         } else{
-            s << "ModifierBag "
+            s << "ModifierList "
               << "<" << this << "> " << std::endl;
         }
     }
 
-    SyntaxType ModifierBag::getType() {
+    SyntaxType ModifierList::getType() {
         return SyntaxType::ModifierBag;
     }
 
-    void ModifierBag::add(const std::shared_ptr<SyntaxNode> &child) {
+    void ModifierList::add(const std::shared_ptr<ModifierMark> &child) {
         _marks.push_back(child);
     }
 
-    bool ModifierBag::hasChild() {
+    bool ModifierList::hasChild() {
         return !_marks.empty();
     }
 }

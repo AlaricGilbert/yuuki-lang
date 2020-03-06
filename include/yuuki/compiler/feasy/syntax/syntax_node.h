@@ -18,6 +18,8 @@ namespace yuuki::compiler::feasy::syntax{
         GenericDeclaration,
         InheritDeclaration,
         MethodDeclaration,
+        ParamDeclaration,
+        ParamList,
 
         IdentifierName,
         QualifiedName,
@@ -26,7 +28,9 @@ namespace yuuki::compiler::feasy::syntax{
         GenericType,
 
         BinaryExpression,
-        UnaryExpression
+        UnaryExpression,
+        NameExpression,
+        FieldDeclaration,
     };
     class SyntaxNode{
     public:
@@ -36,5 +40,13 @@ namespace yuuki::compiler::feasy::syntax{
         virtual bool hasChild() = 0;
         virtual ~SyntaxNode() = default;
     };
+
+    template <typename _TListElem>
+    class ISyntaxList{
+    public:
+        static_assert(std::is_base_of<SyntaxNode,_TListElem>::value);
+        virtual void add(const std::shared_ptr<_TListElem>& child) = 0;
+    };
+
 }
 #endif //YUUKI_SYNTAX_NODE_H

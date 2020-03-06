@@ -3,6 +3,7 @@
 
 #include <yuuki/compiler/feasy/syntax/syntax_node.h>
 namespace yuuki::compiler::feasy::syntax{
+
     class Expression:public SyntaxNode{
     public:
         virtual void analyseType() = 0;

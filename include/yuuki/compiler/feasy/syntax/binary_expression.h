@@ -6,8 +6,8 @@
 namespace yuuki::compiler::feasy::syntax{
     class BinaryExpression: public Expression{
     public:
-        BinaryExpression(const std::shared_ptr<SyntaxNode>& left,
-                token::TokenType operatorType, const std::shared_ptr<SyntaxNode>& right);
+        BinaryExpression(const std::shared_ptr<Expression>& left,
+                token::TokenType operatorType, const std::shared_ptr<Expression>& right);
         token::TokenType getOperatorType();
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>,bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream& ostream) override;

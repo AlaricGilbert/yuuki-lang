@@ -3,14 +3,18 @@
 
 namespace yuuki::compiler::feasy::syntax{
 
-    void BlockStatement::add(const std::shared_ptr<SyntaxNode> &child) {
+    void BlockStatement::add(const std::shared_ptr<Statement> &child) {
         _children.push_back(child);
     }
 
+    void BlockStatement::add(const std::shared_ptr<Expression> &child) {
+        _children.push_back(child);
+    }
     void BlockStatement::writeCurrentInfo(std::ostream &s) {
         if(s.rdbuf() == std::cout.rdbuf()){
             s << rang::fg::gray     << "BlockStatement "
-              << rang::fg::yellow   << "<" << this << "> " << std::endl;
+              << rang::fg::yellow   << "<" << this << "> "
+              << rang::fg::reset    << std::endl;
         } else{
             s << "BlockStatement "
               << "<" << this << "> " << std::endl;
@@ -30,4 +34,5 @@ namespace yuuki::compiler::feasy::syntax{
     bool BlockStatement::hasChild() {
         return !_children.empty();
     }
+
 }
