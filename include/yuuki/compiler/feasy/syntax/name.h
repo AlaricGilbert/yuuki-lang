@@ -16,7 +16,7 @@ namespace yuuki::compiler::feasy::syntax{
 
     class IdentifierName: public Name{
     public:
-        explicit IdentifierName(const std::string& id);
+        explicit IdentifierName(const std::string& id, std::size_t tokenId);
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream& ostream) override;
         SyntaxType getType() override ;
@@ -24,19 +24,22 @@ namespace yuuki::compiler::feasy::syntax{
         std::string toString() override;
     private:
         std::string _identifier;
+        std::size_t _tokenId;
     };
     class QualifiedName: public Name{
     public:
-        QualifiedName(const std::shared_ptr<Name>& left,
-                      const std::shared_ptr<IdentifierName>& right);
+        QualifiedName(const std::shared_ptr<IdentifierName>& left,
+                      std::size_t periodIndex,
+                      const std::shared_ptr<Name>& right);
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream& ostream) override;
         SyntaxType getType() override ;
         bool hasChild() override ;
         std::string toString() override;
     private:
-        std::shared_ptr<Name> _left;
-        std::shared_ptr<IdentifierName> _right;
+        std::shared_ptr<IdentifierName> _left;
+        std::shared_ptr<Name> _right;
+        std::size_t _periodTokId;
     };
 
     class NameExpression: public Expression{

@@ -7,6 +7,7 @@
 #include <memory>
 namespace yuuki::compiler::feasy::syntax{
     enum class SyntaxType{
+        SyntaxUnit,
         ImportDirective,
 
         ModifierMark,
@@ -14,15 +15,18 @@ namespace yuuki::compiler::feasy::syntax{
 
         BlockStatement,
 
+        NamespaceDeclaration,
         ClassDeclaration,
         GenericDeclaration,
         InheritDeclaration,
         MethodDeclaration,
+        FieldDeclaration,
         ParamDeclaration,
         ParamList,
 
         IdentifierName,
         QualifiedName,
+
         TrivialType,
         ArrayType,
         GenericType,
@@ -30,7 +34,6 @@ namespace yuuki::compiler::feasy::syntax{
         BinaryExpression,
         UnaryExpression,
         NameExpression,
-        FieldDeclaration,
     };
     class SyntaxNode{
     public:
@@ -44,9 +47,14 @@ namespace yuuki::compiler::feasy::syntax{
     template <typename _TListElem>
     class ISyntaxList{
     public:
-        static_assert(std::is_base_of<SyntaxNode,_TListElem>::value);
         virtual void add(const std::shared_ptr<_TListElem>& child) = 0;
+        virtual ~ISyntaxList();
     };
+
+    template<typename _TListElem>
+    ISyntaxList<_TListElem>::~ISyntaxList() {
+        static_assert(std::is_base_of<SyntaxNode,_TListElem>::value);
+    }
 
 }
 #endif //YUUKI_SYNTAX_NODE_H

@@ -6,6 +6,7 @@
 #include <yuuki/compiler/feasy/syntax_context.h>
 #include <yuuki/compiler/feasy/syntax/binary_expression.h>
 #include <yuuki/compiler/feasy/syntax/name.h>
+#include <yuuki/compiler/feasy/syntax/namespace_declaration.h>
 #include <yuuki/compiler/feasy/syntax/unary_expression.h>
 namespace yuuki::compiler::feasy{
     /**
@@ -20,9 +21,16 @@ namespace yuuki::compiler::feasy{
          */
         Parser(const std::shared_ptr<SyntaxContext> &context, const std::shared_ptr<diagnostics::DiagnosticStream> &diagStream);
 
+        void parse();
 
-        std::shared_ptr<syntax::Expression> parseExpression();
+        void parseImportDirective();
+        void parseNamespaceDeclaration();
+        void parseClassDeclaration(const std::shared_ptr<syntax::ISyntaxList<syntax::ClassDeclaration>>& parent);
+        void parseGenericDeclaration();
+        void parseExpression();
+        std::shared_ptr<syntax::Name> parseName();
     private:
+        void move(std::initializer_list<token::TokenType> acceptableEndTokType);
         // copy of the context
         std::shared_ptr<SyntaxContext> _context ;
         // copy of the diagnostic info collector

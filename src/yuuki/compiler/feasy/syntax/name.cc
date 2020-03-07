@@ -3,8 +3,9 @@
 
 namespace yuuki::compiler::feasy::syntax{
 
-    IdentifierName::IdentifierName(const std::string &id) {
+    IdentifierName::IdentifierName(const std::string &id, std::size_t tokId) {
         _identifier = id;
+        _tokenId = tokId;
     }
 
     std::string IdentifierName::toString(){
@@ -35,9 +36,11 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
 
-    QualifiedName::QualifiedName(const std::shared_ptr<Name> &left, const std::shared_ptr<IdentifierName> &right) {
+    QualifiedName::QualifiedName(const std::shared_ptr<IdentifierName> &left,
+            std::size_t tokID, const std::shared_ptr<Name> &right) {
         _left = left;
         _right = right;
+        _periodTokId = tokID;
     }
 
     void QualifiedName::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {

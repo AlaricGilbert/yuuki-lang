@@ -22,7 +22,10 @@ namespace yuuki::compiler::feasy::syntax{
     private:
         std::vector<std::shared_ptr<Expression>> _fieldDeclExprs;
     };
-    class ClassDeclaration:public SyntaxNode, public ISyntaxList<MethodDeclaration>, public ISyntaxList<FieldDeclaration>{
+    class ClassDeclaration:public SyntaxNode,
+                           public ISyntaxList<MethodDeclaration>,
+                           public ISyntaxList<FieldDeclaration>,
+                           public ISyntaxList<ClassDeclaration>{
     public:
         explicit ClassDeclaration(const std::shared_ptr<ModifierList> &mod,
                                   const std::shared_ptr<Name> &name,
@@ -30,6 +33,7 @@ namespace yuuki::compiler::feasy::syntax{
                                   const std::shared_ptr<GenericDeclaration>& genericInfos);
         void add(const std::shared_ptr<MethodDeclaration> &method) override ;
         void add(const std::shared_ptr<FieldDeclaration> &field) override ;
+        void add(const std::shared_ptr<ClassDeclaration> &child) override ;
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream& ostream) override;
         bool hasChild() override ;

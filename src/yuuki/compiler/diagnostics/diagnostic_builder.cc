@@ -50,7 +50,7 @@ namespace yuuki::compiler::diagnostics{
     }
 
     DiagnosticBuilder::ErrorBuildContextBuildContext
-    DiagnosticBuilder::build(CompileError error, std::size_t contextID) {
+    DiagnosticBuilder::error(CompileError error, std::size_t contextID) {
         return ErrorBuildContextBuildContext(error,contextID);
     }
 }

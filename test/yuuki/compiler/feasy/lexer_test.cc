@@ -147,6 +147,7 @@ namespace yuuki.test.foo {
     auto sm = std::make_shared<SyntaxContextManager>();
     auto d = std::make_shared<DiagnosticStream>(sm);
     auto context = sm->create(code);
+    context->codePath = "INTERNAL_TEST/lexFailTest.yuk";
     Lexer lexer = Lexer(context,d);
     lexer.lex();
 

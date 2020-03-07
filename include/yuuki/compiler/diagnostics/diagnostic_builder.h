@@ -55,7 +55,7 @@ namespace yuuki::compiler::diagnostics{
             std::size_t _contextID;
         };
 
-        static ErrorBuildContextBuildContext build(CompileError error, std::size_t contextID);
+        static ErrorBuildContextBuildContext error(CompileError error, std::size_t contextID);
 
     };
 }

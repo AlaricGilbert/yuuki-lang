@@ -22,6 +22,11 @@ namespace yuuki::compiler::feasy::syntax{
     void ClassDeclaration::add(const std::shared_ptr<FieldDeclaration> &field) {
         _members.push_back(field);
     }
+
+    void ClassDeclaration::add(const std::shared_ptr<ClassDeclaration> &child) {
+        _members.push_back(child);
+    }
+
     void ClassDeclaration::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
         syntaxWalker(_name, false);
         if(_mod->hasChild())
