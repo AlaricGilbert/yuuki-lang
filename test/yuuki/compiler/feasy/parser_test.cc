@@ -7,8 +7,9 @@ using namespace yuuki::compiler::feasy;
 using namespace yuuki::compiler::feasy::syntax;
 using namespace yuuki::compiler::diagnostics;
 TEST(Parser,parseName){
-    std::string_view code1 = R"(yuuki.core.test)";
-    std::string_view code2 = R"(yuuki.core.)";
+    std::string_view code1 = R"(yuuki//blabla
+./*23333*/core.test)";
+    std::string_view code2 = R"(yuuki.core./*23333*/)";
     auto sm = std::make_shared<SyntaxContextManager>();
     auto d = std::make_shared<DiagnosticStream>(sm);
     auto context1 = sm->create(code1);

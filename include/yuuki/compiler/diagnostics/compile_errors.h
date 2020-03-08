@@ -10,7 +10,8 @@ namespace yuuki::compiler::diagnostics{
         InterlineCommentNotClosed = 1003,
         // YK2000-2999: parse errors
         UnexpectedToken = 2000,
-        SemiExpected = 2001
+        SemiExpected = 2001,
+        ImportExpected = 2002,
     };
 }
 #endif //YUUKI_COMPILE_ERRORS_H

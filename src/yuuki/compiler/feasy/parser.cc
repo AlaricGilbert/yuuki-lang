@@ -1,4 +1,5 @@
 #include <yuuki/compiler/feasy/parser.h>
+#include <yuuki/compiler/diagnostics/diagnostic_builder.h>
 namespace yuuki::compiler::feasy{
     using namespace yuuki::compiler::diagnostics;
     using namespace yuuki::compiler::feasy::token;
@@ -10,6 +11,7 @@ namespace yuuki::compiler::feasy{
         _tokenIndex = 0;
     }
     void Parser::parseExpression() {
+        static_assert(std::is_base_of<Parser,Parser>::value);
         // check for unary operators
         switch (_context->tokens[_tokenIndex]->type){
             case TokenType::op_minus:
@@ -30,6 +32,19 @@ namespace yuuki::compiler::feasy{
     }
 
     void Parser::parse() {
+        // the recovery lambda for main parse section
+        auto recover = [&]()->void{
+            move({
+                         TokenType::kw_import,
+                         TokenType::kw_namespace,
+                         // generate modifiers movers
+#define MODIFIER(X) TokenType::kw_##X,
+#include <yuuki/compiler/feasy/token/tokens.inc>
+                         TokenType::inline_comment,
+                         TokenType::interline_comment,
+                         TokenType::semi
+                 });
+        };
         while (_tokenIndex < _context->tokens.size()){
             switch (_context->tokens[_tokenIndex]->type){
                 // we are going to handle the main situations in the global syntax unit
@@ -44,21 +59,61 @@ namespace yuuki::compiler::feasy{
                 //     case TokenType::kw_public:
                 #define MODIFIER(X) case TokenType::kw_##X:
                 #include <yuuki/compiler/feasy/token/tokens.inc>
+                    {
                     // these modifiers marks a global declaration, a warning should be pushed in semantic phase
-                    // TODO: parse modifiers
+                    auto modifiers = parseModifiers();
+                    // we are going to handle followed situations:
+                    if(_context->tokens[_tokenIndex]->type == TokenType::kw_class) {
+
+                    }
                     _tokenIndex++;
                     break;
+                }
                 case TokenType::identifier: {
                     // we just can't decide what happened here, we should firstly parse the full name
                     // since we may meet 'some.situation.like.this'
+                    auto firstIdIndex = _tokenIndex;
                     auto name = parseName();
 
-                    // we met a new choice:
+                    // we are going to find out what situation should be:
+                    //      some.libs; -> import some.libs;
                     //
+                    //      when next line is like import some.other.libs; or namespace some.ns{
+                    //
+                    //      some {     -> class some {
+                    //
+                    //      some.lib { -> namespace  {
                     switch (_context->tokens[_tokenIndex]->type){
+                        case TokenType::semi: {
+                            // we met the first situation, think it's a import directive and push an error
+                            auto import = std::make_shared<ImportDirective>(std::move(name));
+                            _context->syntaxTree->add(import);
+                            _diagnosticStream << DiagnosticBuilder::
+                            error(CompileError::ImportExpected, _context->syntaxID)
+                                    .before(firstIdIndex)
+                                    .message("import keyword expected")
+                                    .suggestion("insert 'import' here")
+                                    .build();
+                            break;
+                        }
+                        case TokenType::l_brace:{
+                            // it's a start of a block
+                            if(name->getType() == SyntaxType::IdentifierName){
+                                // tend to think it's a class
+                                // TODO: make a class
+                            } else{
+                                // name is a Qualified name, must be a namespace.
+                                // TODO: make a namespace
+                            }
+
+                        }
                         default:
+                            // unexpected situation
+                            recover();
+                            // TODO: push error 'UnexpectedTokens'
                             break;
                     }
+                    break;
                 }
                 // we are going to handle comments
                 case TokenType::inline_comment:
@@ -78,16 +133,7 @@ namespace yuuki::compiler::feasy{
                     //      import, namespace, //, /**/, ;, modifiers
                     // we should just jump over them and throw an error
                     std::size_t startIndex = _tokenIndex;
-                    move({
-                        TokenType::kw_import,
-                        TokenType::kw_namespace,
-                        // generate modifiers
-                        #define MODIFIER(X) TokenType::kw_##X,
-                        #include <yuuki/compiler/feasy/token/tokens.inc>
-                        TokenType::inline_comment,
-                        TokenType::interline_comment,
-                        TokenType::semi
-                    });
+                    recover();
                     // we have moved into a position we can handle we should just push the error happened
                     // since ErrorBuilder::error().ranges() is not implemented yet, just do nothing here
                     // TODO: push error 'UnexpectedTokens'
@@ -106,10 +152,10 @@ namespace yuuki::compiler::feasy{
 
     void Parser::move(std::initializer_list<TokenType> acceptable) {
         TokenType lastType;
-        do{
+        do {
             lastType = _context->tokens[_tokenIndex++]->type;
-        }while ((std::find(acceptable.begin(),acceptable.end(),lastType)==acceptable.end())
-              &&(lastType != TokenType::eof));
+        } while ((std::find(acceptable.begin(), acceptable.end(), lastType) == acceptable.end())
+                 && (lastType != TokenType::eof));
         _tokenIndex--;
     }
 
@@ -117,19 +163,43 @@ namespace yuuki::compiler::feasy{
         // call to this function should ensure that token _context->tokens[_tokenIndex] is a identifier!!
         auto currName =std::make_shared<IdentifierName>(
                 (std::string)_context->tokens[_tokenIndex]->rawCode,_tokenIndex);
-        // since current token is NOT eof, so next token must exists, we do not have to check _tokenIndex < tokens.size()
-        if(_context->tokens[++_tokenIndex]->type == TokenType::op_period){
-            // same as above, we do not have to check _tokenIndex < tokens.size()
-            // check for next token type.
-            if(_context->tokens[_tokenIndex+1]->type == TokenType::identifier) {
-                // record the _tokenIndex BEFORE we make change to it.
-                auto periodIndex = _tokenIndex;
-                _tokenIndex++;
+        // move to next non-comment token position
+        _tokenIndex++;
+        tryJumpOverComments();
+        if(_context->tokens[_tokenIndex]->type == TokenType::op_period){
+            // record the current period mark position
+            auto periodIndex = _tokenIndex;
+            // move to next non-comment token position
+            _tokenIndex++;
+            tryJumpOverComments();
+            if(_context->tokens[_tokenIndex]->type == TokenType::identifier) {
                 // continue to parse right part of name
                 auto rightName = parseName();
                 return std::make_shared<QualifiedName>(std::move(currName), periodIndex, rightName);
+            } else{
+                // since the next usable token is not a identifier, roll back.
+                _tokenIndex = periodIndex;
             }
         }
         return currName;
+    }
+
+    inline void Parser::tryJumpOverComments() {
+        TokenType lastType;
+        do {
+            lastType = _context->tokens[_tokenIndex++]->type;
+        } while ((lastType == TokenType::interline_comment || lastType == TokenType::inline_comment) &&
+                 _tokenIndex < _context->tokens.size());
+        _tokenIndex--;
+    }
+
+    std::shared_ptr<ModifierList> Parser::parseModifiers() {
+        // call to this function should ensure that token _context->tokens[_tokenIndex] is a modifier!!
+        auto modifiers = std::make_shared<ModifierList>();
+        do {
+            modifiers->add(std::make_shared<ModifierMark>(_context->tokens[_tokenIndex]->type, _tokenIndex));
+            tryJumpOverComments();
+        } while (_context->tokens[++_tokenIndex]->is(TokenType::modifiers));
+        return modifiers;
     }
 }

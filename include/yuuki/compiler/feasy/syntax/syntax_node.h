@@ -34,7 +34,12 @@ namespace yuuki::compiler::feasy::syntax{
         BinaryExpression,
         UnaryExpression,
         NameExpression,
+
+        InlineComment,
+        InterlineComment
     };
+    template <class _TListElem>
+    class ISyntaxContext;
     class SyntaxNode{
     public:
         virtual void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>,bool)>& syntaxWalker) = 0;

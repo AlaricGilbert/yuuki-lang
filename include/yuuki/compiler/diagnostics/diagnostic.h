@@ -51,6 +51,22 @@ namespace yuuki::compiler::diagnostics{
     };
 
     /**
+ * A diagnostic that issues error message before the position of the specified token.
+ */
+    class ErrorBeforeDiagnostic: public Diagnostic{
+    public:
+        ErrorBeforeDiagnostic(CompileError error, std::size_t contextID, std::size_t tokenID,
+                             const std::string& message,const std::string& suggestion);
+        void writeTo(std::ostream& stream,const std::shared_ptr<feasy::SyntaxContextManager>& ctxManager) override ;
+    private:
+        CompileError _errorCode;
+        std::size_t _contextID;
+        std::size_t _tokenID;
+        std::string _message;
+        std::string _suggestion;
+    };
+
+    /**
      * A diagnostic that issues error message between the tokens in the range
      */
     class ErrorRangesDiagnostic: public Diagnostic{

@@ -39,6 +39,14 @@ namespace yuuki::compiler::diagnostics{
             std::size_t _tokenID;
         };
 
+        class ErrorBeforeBuildContext: public DiagnosticBuildContext{
+        public:
+            ErrorBeforeBuildContext(CompileError error,std::size_t contextID,std::size_t tokenID);
+            std::unique_ptr<Diagnostic> build() override ;
+            CompileError _errorCode;
+            std::size_t _tokenID;
+        };
+
         class ErrorRangesBuildContext: public DiagnosticBuildContext{
             std::unique_ptr<Diagnostic> build() override ;
         };
@@ -48,6 +56,7 @@ namespace yuuki::compiler::diagnostics{
             friend DiagnosticBuilder;
             ErrorAtBuildContext at(std::size_t tokenID);
             ErrorAfterBuildContext after(std::size_t tokenID);
+            ErrorBeforeBuildContext before(std::size_t tokenID);
             ErrorRangesBuildContext ranges(std::size_t startTokID,std::size_t endTokID);
         private:
             ErrorBuildContextBuildContext(CompileError error, std::size_t contextID);

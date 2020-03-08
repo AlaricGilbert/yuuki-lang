@@ -29,6 +29,8 @@ namespace yuuki::compiler::feasy{
         void parseGenericDeclaration();
         void parseExpression();
         std::shared_ptr<syntax::Name> parseName();
+        std::shared_ptr<syntax::ModifierList> parseModifiers();
+        inline void tryJumpOverComments();
     private:
         void move(std::initializer_list<token::TokenType> acceptableEndTokType);
         // copy of the context
