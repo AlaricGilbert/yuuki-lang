@@ -17,6 +17,10 @@ namespace yuuki::compiler::diagnostics{
         return ostream;
     }
 
+    void DiagnosticStream::clear() {
+        _diagnostics.clear();
+    }
+
     std::shared_ptr<DiagnosticStream> operator<<(std::shared_ptr<DiagnosticStream>&streamPtr
             ,std::unique_ptr<Diagnostic> diagPtr){
         *streamPtr << std::move(diagPtr);

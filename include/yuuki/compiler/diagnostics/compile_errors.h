@@ -11,7 +11,11 @@ namespace yuuki::compiler::diagnostics{
         // YK2000-2999: parse errors
         UnexpectedToken = 2000,
         SemiExpected = 2001,
-        ImportExpected = 2002,
+        CommaExpected = 2002,
+        RBraceExpected = 2003,
+        RParenExpected = 2004,
+        RSquareExpected = 2005,
+        ImportExpected = 2006,
     };
 }
 #endif //YUUKI_COMPILE_ERRORS_H

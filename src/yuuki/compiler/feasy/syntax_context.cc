@@ -15,6 +15,13 @@ namespace yuuki::compiler::feasy{
                 lastLine = i + 1;
             }
         }
+        // handle with
+        // "....str"
+        //         ^  not end with \n!
+        if(lastLine != code.size()){
+            lineStartPos.push_back(lastLine);
+            lines.push_back(code.substr(lastLine));
+        }
     }
 
     CodePosition SyntaxContext::locate(const token::Token &token) {

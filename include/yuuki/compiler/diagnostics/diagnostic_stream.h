@@ -12,6 +12,7 @@ namespace yuuki::compiler::diagnostics{
         explicit DiagnosticStream(const std::shared_ptr<feasy::SyntaxContextManager> &contextManager);
         DiagnosticStream& operator<<(std::unique_ptr<Diagnostic> diagPtr);
         friend std::ostream &operator<<(std::ostream& ostream,const DiagnosticStream& diagnosticStream);
+        void clear();
     private:
         std::shared_ptr<feasy::SyntaxContextManager> _contextManager;
         std::vector<std::unique_ptr<Diagnostic>> _diagnostics;

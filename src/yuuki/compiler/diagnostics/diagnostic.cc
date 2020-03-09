@@ -119,7 +119,7 @@ namespace yuuki::compiler::diagnostics{
         if (isCout)
             stream << rang::fg::reset;
         stream << std::endl;
-        if (_suggestion.empty()) {
+        if (!_suggestion.empty()) {
             stream << _suggestion << std::endl;
         }
     }
@@ -165,7 +165,7 @@ namespace yuuki::compiler::diagnostics{
         if (isCout)
             stream << rang::fg::reset;
         stream << std::endl;
-        if (_suggestion.empty()) {
+        if (!_suggestion.empty()) {
             stream << _suggestion << std::endl;
         }
     }
@@ -211,7 +211,7 @@ namespace yuuki::compiler::diagnostics{
         if (isCout)
             stream << rang::fg::reset;
         stream << std::endl;
-        if (_suggestion.empty()) {
+        if (!_suggestion.empty()) {
             stream << _suggestion << std::endl;
         }
     }

@@ -11,13 +11,14 @@ namespace yuuki::compiler::feasy::syntax{
         ImportDirective,
 
         ModifierMark,
-        ModifierBag,
+        ModifierList,
 
         BlockStatement,
 
         NamespaceDeclaration,
         ClassDeclaration,
         GenericDeclaration,
+        GenericArgumentList,
         InheritDeclaration,
         MethodDeclaration,
         FieldDeclaration,
@@ -36,7 +37,7 @@ namespace yuuki::compiler::feasy::syntax{
         NameExpression,
 
         InlineComment,
-        InterlineComment
+        InterlineComment,
     };
     template <class _TListElem>
     class ISyntaxContext;

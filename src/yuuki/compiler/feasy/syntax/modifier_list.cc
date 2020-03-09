@@ -63,7 +63,7 @@ namespace yuuki::compiler::feasy::syntax {
     }
 
     SyntaxType ModifierList::getType() {
-        return SyntaxType::ModifierBag;
+        return SyntaxType::ModifierList;
     }
 
     void ModifierList::add(const std::shared_ptr<ModifierMark> &child) {

@@ -47,11 +47,15 @@ namespace yuuki::compiler::feasy {
 
         std::shared_ptr<syntax::Name> parseName();
 
+        std::shared_ptr<syntax::IdentifierName> parseIdentifier();
+
         std::shared_ptr<syntax::ModifierList> parseModifiers();
 
         std::shared_ptr<syntax::ClassDeclaration> parseClass();
 
         std::shared_ptr<syntax::GenericDeclaration> parseGenericInfo();
+
+        std::shared_ptr<syntax::GenericArgumentList> parseGenericArgument();
 
     private:
         inline void move(std::initializer_list<token::TokenType> acceptableEndTokType) {
@@ -76,6 +80,10 @@ namespace yuuki::compiler::feasy {
 
         inline token::TokenType getCurrentTokenType() {
             return _context->tokens[_tokenIndex]->type;
+        }
+
+        inline token::TokenType getTokenType(std::size_t index){
+            return _context->tokens[index]->type;
         }
 
         // copy of the context

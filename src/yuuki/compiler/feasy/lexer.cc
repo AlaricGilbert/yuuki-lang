@@ -22,7 +22,7 @@ namespace yuuki::compiler::feasy{
             return true;
 
         // returns a eof token when lexer reaches the end of the code string_view
-        if (_position + 1 >= _code.size()) {
+        if (_position >= _code.size()) {
             auto token = std::make_unique<token::Token>();
             token->type = token::TokenType::eof;
             token->offset = _position;
@@ -347,7 +347,8 @@ namespace yuuki::compiler::feasy{
         // check for multi char operators
         while (token::TokenUtil::isOperator(
                 token::TokenUtil::getType(
-                        (std::string) _code.substr(_position,length)))){
+                        (std::string) _code.substr(_position,length)))
+                        && length + _position <= _code.size()){
             length++;
         }
         length -= 1;

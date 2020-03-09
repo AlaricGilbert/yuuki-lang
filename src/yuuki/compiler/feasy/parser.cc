@@ -153,9 +153,8 @@ namespace yuuki::compiler::feasy{
 
     std::shared_ptr<Name> Parser::parseName() {
         // call to this function should ensure that token _context->tokens[_tokenIndex] is a identifier!!
-        auto currName =std::make_shared<IdentifierName>(
-                (std::string)_context->tokens[_tokenIndex]->rawCode,_tokenIndex);
-        // move to next non-comment token position
+        auto currName = parseIdentifier();
+        // since call won't move over the identifier, we should move here
         _tokenIndex++;
         jumpOverComments();
         if(_context->tokens[_tokenIndex]->type == TokenType::op_period){
@@ -186,13 +185,94 @@ namespace yuuki::compiler::feasy{
         return modifiers;
     }
 
-    std::shared_ptr<syntax::ClassDeclaration> Parser::parseClass() {
+    std::shared_ptr<ClassDeclaration> Parser::parseClass() {
         return std::shared_ptr<syntax::ClassDeclaration>();
     }
 
-    std::shared_ptr<syntax::GenericDeclaration> Parser::parseGenericInfo() {
-        return std::shared_ptr<syntax::GenericDeclaration>();
+    std::shared_ptr<GenericDeclaration> Parser::parseGenericInfo() {
+        auto genericDecl = std::make_shared<GenericDeclaration>(_tokenIndex++);
+        parseNextGenericDeclArg:
+        jumpOverComments();
+        switch (getCurrentTokenType()){
+            case TokenType::identifier: {
+                genericDecl->add(parseIdentifier());
+                _tokenIndex++;
+                jumpOverComments();
+                // we are going to handle situations:
+                //    <...TParsed ,                 , what expected for next
+                //                ^
+                //    <...TParsed TNotParsed        , push 'comma' expected
+                //                    ^
+                //    <...TParsed >                 , end generic info parsing
+                //                ^
+                // so we look forward for next:
+                switch (getCurrentTokenType()) {
+                    case TokenType::comma:
+                        _tokenIndex++;
+                        goto parseNextGenericDeclArg;
+                    case TokenType::identifier:
+                        // push an error immediately and parse next identifier
+                        _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected, _context->syntaxID)
+                                .after(_tokenIndex - 1)    // we should push an error after last identifier
+                                .message("expected ',' between two identifiers")
+                                .suggestion("add ',' here")
+                                .build();
+                        goto parseNextGenericDeclArg;
+                    case TokenType::op_greater:
+                        break;
+                    default:
+                        goto errorHandle;
+                }
+                break;
+            }
+            case TokenType::comma:{
+                // we are going to handle situations:
+                //    < ,...
+                //     ^                    identifier expected
+                //or  <...TParsed, ,...>
+                //                ^         identifier expected
+                // and we are at the token index of the comma before '...>'
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected, _context->syntaxID)
+                        .before(_tokenIndex)    // we should push an error before current token
+                        .message("expected identifier")
+                        .build();
+                _tokenIndex++;
+                goto parseNextGenericDeclArg;
+            }
+            case TokenType::op_greater:{
+                // we are going to handle situations:
+                //    < >
+                //     ^         identifier expected
+                //    <..., >
+                //         ^     identifier expected
+                // and both of the situations will end the parse
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected, _context->syntaxID)
+                        .before(_tokenIndex)    // we should push an error before current token
+                        .message("expected identifier")
+                        .build();
+                break;
+            }
+            default:
+                goto errorHandle;
+        }
+        return genericDecl;
+        errorHandle:
+        auto errorStartTok = _tokenIndex;
+        // other unexpected token move to '>' or any punctuator in any error situation
+        move({
+            TokenType::op_greater,
+#define PUNCTUATOR(X,Y) TokenType::X,
+#include <yuuki/compiler/feasy/token/tokens.inc>
+        });
+        // we have moved into a position we can handle we should just push the error happened
+        // since ErrorBuilder::error().ranges() is not implemented yet, just do nothing here
+        // TODO: push error 'UnexpectedTokens'
+        return genericDecl;
     }
 
-
+    std::shared_ptr<syntax::IdentifierName> Parser::parseIdentifier() {
+        // call to this function should ensure that token _context->tokens[_tokenIndex] is a identifier!!
+        return std::make_shared<IdentifierName>(
+                (std::string) _context->tokens[_tokenIndex]->rawCode, _tokenIndex);
+    }
 }
