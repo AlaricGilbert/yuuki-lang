@@ -30,6 +30,10 @@ namespace yuuki::compiler::feasy::syntax{
         _syntax.push_back(child);
     }
 
+    void SyntaxUnit::add(const std::shared_ptr<ClassDeclaration> &child) {
+        _syntax.push_back(child);
+    }
+
     void SyntaxUnit::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
         for (std::size_t i = 0; i < _syntax.size(); ++i) {
             syntaxWalker(_syntax[i],i == _syntax.size() - 1);

@@ -10,6 +10,7 @@ namespace yuuki::compiler::feasy{
         _diagnosticStream = diagStream;
         _tokenIndex = 0;
     }
+
     void Parser::parseExpression() {
         static_assert(std::is_base_of<Parser,Parser>::value);
         // check for unary operators
@@ -59,14 +60,12 @@ namespace yuuki::compiler::feasy{
                 //     case TokenType::kw_public:
                 #define MODIFIER(X) case TokenType::kw_##X:
                 #include <yuuki/compiler/feasy/token/tokens.inc>
-                    {
-                    // these modifiers marks a global declaration, a warning should be pushed in semantic phase
-                    auto modifiers = parseModifiers();
-                    // we are going to handle followed situations:
-                    if(_context->tokens[_tokenIndex]->type == TokenType::kw_class) {
-
-                    }
-                    _tokenIndex++;
+                // the modifiers in the global environment only results lead to a global namespaced class
+                // so we can merge the situation with the kw_class
+                case TokenType::kw_class:
+                {
+                    _context->syntaxTree->add(parseClass());
+                    if(_context->tokens[_tokenIndex])
                     break;
                 }
                 case TokenType::identifier: {
@@ -150,28 +149,19 @@ namespace yuuki::compiler::feasy{
 
     }
 
-    void Parser::move(std::initializer_list<TokenType> acceptable) {
-        TokenType lastType;
-        do {
-            lastType = _context->tokens[_tokenIndex++]->type;
-        } while ((std::find(acceptable.begin(), acceptable.end(), lastType) == acceptable.end())
-                 && (lastType != TokenType::eof));
-        _tokenIndex--;
-    }
-
     std::shared_ptr<Name> Parser::parseName() {
         // call to this function should ensure that token _context->tokens[_tokenIndex] is a identifier!!
         auto currName =std::make_shared<IdentifierName>(
                 (std::string)_context->tokens[_tokenIndex]->rawCode,_tokenIndex);
         // move to next non-comment token position
         _tokenIndex++;
-        tryJumpOverComments();
+        jumpOverComments();
         if(_context->tokens[_tokenIndex]->type == TokenType::op_period){
             // record the current period mark position
             auto periodIndex = _tokenIndex;
             // move to next non-comment token position
             _tokenIndex++;
-            tryJumpOverComments();
+            jumpOverComments();
             if(_context->tokens[_tokenIndex]->type == TokenType::identifier) {
                 // continue to parse right part of name
                 auto rightName = parseName();
@@ -184,22 +174,15 @@ namespace yuuki::compiler::feasy{
         return currName;
     }
 
-    inline void Parser::tryJumpOverComments() {
-        TokenType lastType;
-        do {
-            lastType = _context->tokens[_tokenIndex++]->type;
-        } while ((lastType == TokenType::interline_comment || lastType == TokenType::inline_comment) &&
-                 _tokenIndex < _context->tokens.size());
-        _tokenIndex--;
-    }
-
     std::shared_ptr<ModifierList> Parser::parseModifiers() {
         // call to this function should ensure that token _context->tokens[_tokenIndex] is a modifier!!
         auto modifiers = std::make_shared<ModifierList>();
         do {
             modifiers->add(std::make_shared<ModifierMark>(_context->tokens[_tokenIndex]->type, _tokenIndex));
-            tryJumpOverComments();
+            jumpOverComments();
         } while (_context->tokens[++_tokenIndex]->is(TokenType::modifiers));
         return modifiers;
     }
+
+
 }
