@@ -46,7 +46,10 @@ namespace yuuki::compiler::feasy::syntax{
         virtual void writeCurrentInfo(std::ostream& ostream) = 0;
         virtual SyntaxType getType() = 0;
         virtual bool hasChild() = 0;
+        virtual std::size_t start() = 0;
+        virtual std::size_t end() = 0;
         virtual ~SyntaxNode() = default;
+        constexpr static std::size_t invalidTokenIndex = std::numeric_limits<std::size_t>::max();
     };
 
     template <typename _TListElem>

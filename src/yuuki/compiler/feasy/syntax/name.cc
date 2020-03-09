@@ -35,6 +35,13 @@ namespace yuuki::compiler::feasy::syntax{
         return false;
     }
 
+    std::size_t IdentifierName::start() {
+        return _tokenId;
+    }
+
+    std::size_t IdentifierName::end() {
+        return _tokenId;
+    }
 
     QualifiedName::QualifiedName(const std::shared_ptr<IdentifierName> &left,
             std::size_t tokID, const std::shared_ptr<Name> &right) {
@@ -71,6 +78,14 @@ namespace yuuki::compiler::feasy::syntax{
 
     bool QualifiedName::hasChild() {
         return true;
+    }
+
+    std::size_t QualifiedName::start() {
+        return _left->start();
+    }
+
+    std::size_t QualifiedName::end() {
+        return _right->end();
     }
 
     NameExpression::NameExpression(const std::shared_ptr<Name>& name) {

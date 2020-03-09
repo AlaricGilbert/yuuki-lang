@@ -38,6 +38,14 @@ namespace yuuki::compiler::feasy::syntax {
         return token::TokenUtil::getSpell(_type);
     }
 
+    std::size_t ModifierMark::start() {
+        return _tokenID;
+    }
+
+    std::size_t ModifierMark::end() {
+        return _tokenID;
+    }
+
     void ModifierList::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
         for (std::size_t i = 0; i < _marks.size(); ++i) {
             syntaxWalker(_marks[i], i == _marks.size() - 1);
@@ -64,5 +72,13 @@ namespace yuuki::compiler::feasy::syntax {
 
     bool ModifierList::hasChild() {
         return !_marks.empty();
+    }
+
+    std::size_t ModifierList::start() {
+        return _marks.front()->start();
+    }
+
+    std::size_t ModifierList::end() {
+        return _marks.back()->end();
     }
 }

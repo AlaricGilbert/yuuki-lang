@@ -11,6 +11,8 @@ namespace yuuki::compiler::feasy::syntax {
         void writeCurrentInfo(std::ostream& ostream) override;
         SyntaxType getType() override ;
         bool hasChild() override ;
+        std::size_t start() override;
+        std::size_t end() override;
         std::string toString();
 
     private:
@@ -24,6 +26,8 @@ namespace yuuki::compiler::feasy::syntax {
         SyntaxType getType() override ;
         bool hasChild() override ;
         void add(const std::shared_ptr<ModifierMark>& child) override ;
+        std::size_t start() override;
+        std::size_t end() override;
     private:
         std::vector<std::shared_ptr<ModifierMark>> _marks;
     };

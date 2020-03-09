@@ -11,6 +11,8 @@ namespace yuuki::compiler::feasy::syntax{
         void writeCurrentInfo(std::ostream& ostream) override = 0;
         SyntaxType getType() override = 0;
         bool hasChild() override = 0;
+        std::size_t start() override = 0;
+        std::size_t end() override = 0;
         virtual std::string toString() = 0;
     };
 
@@ -21,6 +23,8 @@ namespace yuuki::compiler::feasy::syntax{
         void writeCurrentInfo(std::ostream& ostream) override;
         SyntaxType getType() override ;
         bool hasChild() override ;
+        std::size_t start() override ;
+        std::size_t end() override;
         std::string toString() override;
     private:
         std::string _identifier;
@@ -35,6 +39,8 @@ namespace yuuki::compiler::feasy::syntax{
         void writeCurrentInfo(std::ostream& ostream) override;
         SyntaxType getType() override ;
         bool hasChild() override ;
+        std::size_t start() override ;
+        std::size_t end() override;
         std::string toString() override;
     private:
         std::shared_ptr<IdentifierName> _left;

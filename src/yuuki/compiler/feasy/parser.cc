@@ -85,7 +85,9 @@ namespace yuuki::compiler::feasy{
                     switch (_context->tokens[_tokenIndex]->type){
                         case TokenType::semi: {
                             // we met the first situation, think it's a import directive and push an error
-                            auto import = std::make_shared<ImportDirective>(std::move(name));
+                            auto import = std::make_shared<ImportDirective>(std::move(name),
+                                                                            SyntaxNode::invalidTokenIndex,
+                                                                            _tokenIndex);
                             _context->syntaxTree->add(import);
                             _diagnosticStream << DiagnosticBuilder::
                             error(CompileError::ImportExpected, _context->syntaxID)
@@ -182,6 +184,14 @@ namespace yuuki::compiler::feasy{
             jumpOverComments();
         } while (_context->tokens[++_tokenIndex]->is(TokenType::modifiers));
         return modifiers;
+    }
+
+    std::shared_ptr<syntax::ClassDeclaration> Parser::parseClass() {
+        return std::shared_ptr<syntax::ClassDeclaration>();
+    }
+
+    std::shared_ptr<syntax::GenericDeclaration> Parser::parseGenericInfo() {
+        return std::shared_ptr<syntax::GenericDeclaration>();
     }
 
 

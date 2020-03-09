@@ -8,10 +8,10 @@ namespace yuuki::compiler::feasy::syntax {
     }
 
     void ImportDirective::writeCurrentInfo(std::ostream &s) {
-        if(s.rdbuf() == std::cout.rdbuf()){
-            s << rang::fg::gray     << "ImportDirective "
-              << rang::fg::yellow   << "<" << this << "> " << std::endl;
-        } else{
+        if (s.rdbuf() == std::cout.rdbuf()) {
+            s << rang::fg::gray << "ImportDirective "
+              << rang::fg::yellow << "<" << this << "> " << std::endl;
+        } else {
             s << "ImportDirective "
               << "<" << this << "> " << std::endl;
         }
@@ -21,11 +21,22 @@ namespace yuuki::compiler::feasy::syntax {
         return SyntaxType::ImportDirective;
     }
 
-    ImportDirective::ImportDirective(const std::shared_ptr<Name> &namespaceName) {
-        _namespaceName = namespaceName;
-    }
-
     bool ImportDirective::hasChild() {
         return true;
+    }
+
+    std::size_t ImportDirective::start() {
+        return _importTokenIndex == invalidTokenIndex? _namespaceName->start():_importTokenIndex;
+    }
+
+    std::size_t ImportDirective::end() {
+        return _semiTokenIndex == invalidTokenIndex ?_namespaceName->end():_semiTokenIndex;
+    }
+
+    ImportDirective::ImportDirective(const std::shared_ptr<Name> &namespaceName, std::size_t importTokenIndex,
+                                     std::size_t semiTokenIndex) {
+        _namespaceName = namespaceName;
+        _importTokenIndex = importTokenIndex;
+        _semiTokenIndex = semiTokenIndex;
     }
 }
