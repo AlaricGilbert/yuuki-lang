@@ -3,7 +3,10 @@
 #include "yuuki/compiler/feasy/parser.h"
 #include "yuuki/compiler/feasy/syntax/syntax_ostream_writer.h"
 #include <memory>
+#include <yuuki/compiler/feasy/token/token_type.h>
+
 using namespace yuuki::compiler::feasy;
+using namespace yuuki::compiler::feasy::token;
 using namespace yuuki::compiler::feasy::syntax;
 using namespace yuuki::compiler::diagnostics;
 TEST(Parser,parseName){
@@ -37,7 +40,32 @@ TEST(Parser,parseGenericInfo){
         Parser p = Parser(context, d);
         l.lex();
         auto gen = p.parseGenericInfo();
-        std::cout <<*gen;
     }
     std::cout << *d;
+}
+
+TEST(Parser,splitCurrentMultiCharOperator){
+    auto code = ">>>>";
+    auto sm = std::make_shared<SyntaxContextManager>();
+    auto d = std::make_shared<DiagnosticStream>(sm);
+    auto context = sm->create(code);
+    Lexer l = Lexer(context,d);
+    Parser p = Parser(context,d);
+    l.lex();
+    p.splitCurrentMultiCharOperator();
+    EXPECT_EQ(context->tokens[0]->type,TokenType::op_greater);
+    EXPECT_EQ(context->tokens[1]->type,TokenType::op_greater);
+    EXPECT_EQ(context->tokens[2]->type,TokenType::op_greatergreater);
+}
+
+TEST(Parser,parseType){
+    auto code = "Complicated/*comment*/<yuuki.list<int32[/*comment*/]>,some/*comment*/.great.class1<T>>[][][]";
+    auto sm = std::make_shared<SyntaxContextManager>();
+    auto d = std::make_shared<DiagnosticStream>(sm);
+    auto context = sm->create(code);
+    Lexer l = Lexer(context,d);
+    Parser p = Parser(context,d);
+    l.lex();
+    auto t = p.parseType();
+    std::cout << *t;
 }

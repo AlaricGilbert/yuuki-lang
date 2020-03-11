@@ -57,7 +57,12 @@ namespace yuuki::compiler::feasy {
 
         std::shared_ptr<syntax::GenericArgumentList> parseGenericArgument();
 
+        std::shared_ptr<syntax::Type> parseType();
+
+        void splitCurrentMultiCharOperator();
+
     private:
+
         inline void move(std::initializer_list<token::TokenType> acceptableEndTokType) {
             token::TokenType lastType;
             do {
@@ -78,12 +83,42 @@ namespace yuuki::compiler::feasy {
             _tokenIndex--;
         }
 
+        inline void moveAndJumpOverComments(){
+            token::TokenType lastType;
+            do {
+                lastType = _context->tokens[++_tokenIndex]->type;
+            } while (
+                    (lastType == token::TokenType::interline_comment || lastType == token::TokenType::inline_comment) &&
+                    _tokenIndex < _context->tokens.size());
+        }
+
+
         inline token::TokenType getCurrentTokenType() {
             return _context->tokens[_tokenIndex]->type;
         }
 
         inline token::TokenType getTokenType(std::size_t index){
             return _context->tokens[index]->type;
+        }
+
+        inline token::TokenType peekTokenType(std::size_t offset) {
+            return _context->tokens[_tokenIndex + offset]->type;
+        }
+
+        std::size_t getFirstNotComment(){
+            std::size_t pos = _tokenIndex;
+            while (getTokenType(pos)== token::TokenType::inline_comment||
+            getTokenType(pos)==token::TokenType::interline_comment)
+                pos++;
+            return pos;
+        }
+
+        std::size_t getNextNotComment(){
+            std::size_t pos = _tokenIndex + 1;
+            while (getTokenType(pos)== token::TokenType::inline_comment||
+                   getTokenType(pos)==token::TokenType::interline_comment)
+                pos++;
+            return pos;
         }
 
         // copy of the context

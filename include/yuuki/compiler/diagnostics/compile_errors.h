@@ -15,7 +15,9 @@ namespace yuuki::compiler::diagnostics{
         RBraceExpected = 2003,
         RParenExpected = 2004,
         RSquareExpected = 2005,
-        ImportExpected = 2006,
+        IdentifierExpected = 2006,
+        ImportExpected = 2007,
+
     };
 }
 #endif //YUUKI_COMPILE_ERRORS_H

@@ -1,4 +1,5 @@
 #include <yuuki/compiler/feasy/syntax/method_declaration.h>
+#include <yuuki/compiler/feasy/syntax/generic_type.h>
 #include <sstream>
 #include <rang/rang.h>
 namespace yuuki::compiler::feasy::syntax {

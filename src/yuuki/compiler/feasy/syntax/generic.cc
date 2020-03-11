@@ -1,5 +1,6 @@
 #include <yuuki/compiler/feasy/syntax/generic.h>
 #include <rang/rang.h>
+#include <sstream>
 
 namespace yuuki::compiler::feasy::syntax{
 
@@ -101,5 +102,15 @@ namespace yuuki::compiler::feasy::syntax{
             return _genericTypes.back()->end();
         }
         return _end;
+    }
+
+    std::string GenericArgumentList::toString() {
+        std::stringstream result;
+        result << "<";
+        for (std::size_t i = 0; i < _genericTypes.size(); ++i) {
+            result << _genericTypes[i]->toString();
+            result << ((i == _genericTypes.size() - 1)? ">" :"," );
+        }
+        return result.str();
     }
 }

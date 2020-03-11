@@ -1,4 +1,5 @@
 #include <yuuki/compiler/feasy/syntax/class_declaration.h>
+#include <yuuki/compiler/feasy/syntax/generic_type.h>
 #include <rang/rang.h>
 #include <sstream>
 #include <memory>

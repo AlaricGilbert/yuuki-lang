@@ -31,6 +31,7 @@ namespace yuuki::compiler::feasy::syntax{
         TrivialType,
         ArrayType,
         GenericType,
+        UnknownType,
 
         BinaryExpression,
         UnaryExpression,

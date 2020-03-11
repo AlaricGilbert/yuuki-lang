@@ -24,7 +24,7 @@ namespace yuuki::compiler::feasy::syntax {
 
     class GenericArgumentList : public SyntaxNode, public ISyntaxList<Type> {
     public:
-        explicit GenericArgumentList(std::size_t startLessOp,std::size_t endGreaterOp);
+        explicit GenericArgumentList(std::size_t startLessOp,std::size_t endGreaterOp = invalidTokenIndex);
         void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream &ostream) override;
         void add(const std::shared_ptr<Type> &types) override;
@@ -33,6 +33,7 @@ namespace yuuki::compiler::feasy::syntax {
         std::size_t start() override;
         std::size_t end() override;
         SyntaxType getType() override;
+        std::string toString();
 
     private:
         std::vector<std::shared_ptr<Type>> _genericTypes;
