@@ -329,7 +329,11 @@ namespace yuuki::compiler::feasy{
         type = std::make_shared<ArrayType>(type,_tokenIndex);
         nextJudgeTokenIndex = getNextNotComment();
         if(getTokenType(nextJudgeTokenIndex)!=token::TokenType::r_square){
-            // TODO: throw r_square expected!
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::IdentifierExpected, _context->syntaxID)
+                    .before(nextJudgeTokenIndex)
+                    .message("']' expected")
+                    .suggestion("insert ']' here")
+                    .build();
             return type;
         }
         _tokenIndex = nextJudgeTokenIndex;
@@ -367,10 +371,10 @@ namespace yuuki::compiler::feasy{
             }
             case TokenType::eof:{
                 _tokenIndex = nextJudgeTokenIndex;
-                _diagnosticStream << DiagnosticBuilder::error(CompileError::RSquareExpected,_context->syntaxID)
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::GreaterExpected,_context->syntaxID)
                         .before(_tokenIndex)
-                        .message("'{' expected")
-                        .suggestion("add '{' here")
+                        .message("'>' expected")
+                        .suggestion("add '>' here")
                         .build();
                 return arguments;
             }

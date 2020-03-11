@@ -5,18 +5,19 @@ namespace yuuki::compiler::diagnostics{
     enum class CompileError{
         // YK1000-1999: lexical errors
         UnexpectedChars = 1000,
-        StringNotClosed = 1001,
-        InvalidNumericConst = 1002,
-        InterlineCommentNotClosed = 1003,
+        StringNotClosed,
+        InvalidNumericConst,
+        InterlineCommentNotClosed,
         // YK2000-2999: parse errors
         UnexpectedToken = 2000,
-        SemiExpected = 2001,
-        CommaExpected = 2002,
-        RBraceExpected = 2003,
-        RParenExpected = 2004,
-        RSquareExpected = 2005,
-        IdentifierExpected = 2006,
-        ImportExpected = 2007,
+        SemiExpected,
+        CommaExpected,
+        RBraceExpected,
+        RParenExpected,
+        RSquareExpected,
+        GreaterExpected,
+        IdentifierExpected,
+        ImportExpected,
 
     };
 }

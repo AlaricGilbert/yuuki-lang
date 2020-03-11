@@ -105,18 +105,20 @@ namespace yuuki::compiler::feasy {
             return _context->tokens[_tokenIndex + offset]->type;
         }
 
-        std::size_t getFirstNotComment(){
+        std::size_t getFirstNotComment() {
             std::size_t pos = _tokenIndex;
-            while (getTokenType(pos)== token::TokenType::inline_comment||
-            getTokenType(pos)==token::TokenType::interline_comment)
+            while (getTokenType(pos) == token::TokenType::inline_comment ||
+                   getTokenType(pos) == token::TokenType::interline_comment)
                 pos++;
             return pos;
         }
 
-        std::size_t getNextNotComment(){
+        std::size_t getNextNotComment() {
+            if(_tokenIndex >= _context->tokens.size() - 1)
+                return _tokenIndex;
             std::size_t pos = _tokenIndex + 1;
-            while (getTokenType(pos)== token::TokenType::inline_comment||
-                   getTokenType(pos)==token::TokenType::interline_comment)
+            while (getTokenType(pos) == token::TokenType::inline_comment ||
+                   getTokenType(pos) == token::TokenType::interline_comment)
                 pos++;
             return pos;
         }

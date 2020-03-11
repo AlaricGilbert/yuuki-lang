@@ -68,4 +68,5 @@ TEST(Parser,parseType){
     l.lex();
     auto t = p.parseType();
     std::cout << *t;
+    std::cout<< *d;
 }
