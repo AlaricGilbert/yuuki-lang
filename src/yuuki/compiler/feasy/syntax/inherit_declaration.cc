@@ -19,7 +19,7 @@ namespace yuuki::compiler::feasy::syntax{
         }
     }
 
-    void InheritDeclaration::addInheritType(const std::shared_ptr<Type> &type) {
+    void InheritDeclaration::add(const std::shared_ptr<Type> &type) {
         _inheritInfos.push_back(type);
     }
 
@@ -29,5 +29,17 @@ namespace yuuki::compiler::feasy::syntax{
 
     bool InheritDeclaration::hasChild() {
         return !_inheritInfos.empty();
+    }
+
+    std::size_t InheritDeclaration::start() {
+        if(_inheritInfos.empty())
+            return invalidTokenIndex;
+        return _inheritInfos.front()->start();
+    }
+
+    std::size_t InheritDeclaration::end() {
+        if(_inheritInfos.empty())
+            return invalidTokenIndex;
+        return _inheritInfos.back()->end();
     }
 }

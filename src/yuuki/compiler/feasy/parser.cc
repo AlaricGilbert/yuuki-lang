@@ -66,7 +66,7 @@ namespace yuuki::compiler::feasy{
                 // so we can merge the situation with the kw_class
                 case TokenType::kw_class:
                 {
-                    _context->syntaxTree->add(parseClass());
+                    //_context->syntaxTree->add(parseClass());
                     if(_context->tokens[_tokenIndex])
                     break;
                 }
@@ -188,11 +188,124 @@ namespace yuuki::compiler::feasy{
         return modifiers;
     }
 
-    std::shared_ptr<ClassDeclaration> Parser::parseClass() {
-        return std::shared_ptr<syntax::ClassDeclaration>();
+    std::shared_ptr<ClassDeclaration> Parser::parseClass(const std::shared_ptr<ModifierList>& modifiers) {
+        _tokenIndex = getNextNotComment();
+        auto name = parseName();
+        std::size_t nextJudgeTokenIndex = getNextNotComment();
+        std::shared_ptr<GenericDeclaration> genDecl;
+        std::shared_ptr<InheritDeclaration> inheritDecl = std::make_shared<InheritDeclaration>();
+        if(getTokenType(nextJudgeTokenIndex)== token::TokenType::op_less){
+            _tokenIndex = nextJudgeTokenIndex;
+            genDecl = parseGenericDeclaration();
+            nextJudgeTokenIndex = getNextNotComment();
+        } else{
+            genDecl = std::make_shared<GenericDeclaration>(SyntaxNode::invalidTokenIndex);
+        }
+        if(getTokenType(nextJudgeTokenIndex)==TokenType::op_colon){
+            _tokenIndex = nextJudgeTokenIndex;
+            nextJudgeTokenIndex = getNextNotComment();
+            parseNextInherit:
+            if(getTokenType(nextJudgeTokenIndex)==TokenType::identifier){
+                _tokenIndex = nextJudgeTokenIndex;
+                inheritDecl->add(parseType());
+                nextJudgeTokenIndex = getNextNotComment();
+                if(getTokenType(nextJudgeTokenIndex)==TokenType::comma) {
+                    _tokenIndex = nextJudgeTokenIndex;
+                    nextJudgeTokenIndex = getNextNotComment();
+                    goto parseNextInherit;
+                }
+                else if (getTokenType(nextJudgeTokenIndex)==TokenType::identifier){
+                    _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected, _context->syntaxID)
+                            .before(nextJudgeTokenIndex)
+                            .message("',' expected")
+                            .suggestion("insert ',' here")
+                            .build();
+                    goto parseNextInherit;
+                }
+            }
+        }
+        auto classDecl = std::make_shared<ClassDeclaration>(modifiers,name,genDecl,inheritDecl);
+        auto errorHandle = [&]()->void{                       // we met a unexpected token, until we met one of:
+            //
+            // we should just jump over them and throw an error
+            std::size_t startIndex = _tokenIndex;
+            move({
+                         TokenType::kw_class,
+                         // generate modifiers movers
+#define MODIFIER(X) TokenType::kw_##X,
+#include <yuuki/compiler/feasy/token/tokens.inc>
+                 });
+            // we have moved into a position we can handle we should just push the error happened
+            // since ErrorBuilder::error().ranges() is not implemented yet, just do nothing here
+            // TODO: push error 'UnexpectedTokens
+        };
+        switchForClassDeclType:
+        nextJudgeTokenIndex = getNextNotComment();
+        switch (getTokenType(nextJudgeTokenIndex)) {
+            case TokenType::semi:
+                classDecl->setSemiTokenIndex(_tokenIndex);
+                break;
+            case TokenType::l_brace: {
+                _tokenIndex = nextJudgeTokenIndex;
+                parseNextMember:
+                nextJudgeTokenIndex = getNextNotComment();
+                std::shared_ptr<ModifierList> modifiers = std::make_shared<ModifierList>();
+                parseNextToken:
+                switch (getTokenType(nextJudgeTokenIndex)) {
+#define MODIFIER(X) case TokenType::kw_##X:
+#include <yuuki/compiler/feasy/token/tokens.inc>
+                        _tokenIndex = nextJudgeTokenIndex;
+                        modifiers = parseModifiers();
+                        goto parseNextToken;
+                    case TokenType::kw_class:
+                        _tokenIndex = nextJudgeTokenIndex;
+                        classDecl->add(parseClass(modifiers));
+                        goto parseNextMember;
+                    case TokenType::identifier: {
+                        std::size_t originTokenIndex = _tokenIndex;
+                        if((!skipOverATypeDeclaration())||(getTokenType(getNextNotComment()))!=TokenType::identifier){
+                            errorHandle();
+                            goto parseNextToken;
+                        }
+                        _tokenIndex = getNextNotComment();
+                        switch (getTokenType(getNextNotComment())){
+                            case TokenType::op_equal:
+                            case TokenType::semi:
+                                _tokenIndex = originTokenIndex;
+                                //classDecl->add(parse)
+                            case TokenType::op_less:
+                            case TokenType::l_brace:
+                                _tokenIndex = originTokenIndex;
+                                classDecl->add(parseMethodDeclaration(modifiers));
+                            default:
+                                errorHandle();
+                                goto parseNextToken;
+                        }
+
+                    }
+                    case TokenType::eof:
+                        break;
+                    default:
+                        errorHandle();
+                        goto parseNextToken;
+                }
+                break;
+            }
+            default:
+                // we met a unexpected token, until we met one of:
+                //
+                // we should just jump over them and throw an error
+                std::size_t startIndex = _tokenIndex;
+                move({TokenType::semi, TokenType::l_brace});
+                // we have moved into a position we can handle we should just push the error happened
+                // since ErrorBuilder::error().ranges() is not implemented yet, just do nothing here
+                // TODO: push error 'UnexpectedTokens
+                goto switchForClassDeclType;
+        }
+        return classDecl;
     }
 
-    std::shared_ptr<GenericDeclaration> Parser::parseGenericInfo() {
+    std::shared_ptr<GenericDeclaration> Parser::parseGenericDeclaration() {
         auto genericDecl = std::make_shared<GenericDeclaration>(_tokenIndex++);
         parseNextGenericDeclArg:
         jumpOverComments();
@@ -347,7 +460,7 @@ namespace yuuki::compiler::feasy{
     }
 
     // warning: this function may make change to _context->tokens
-    std::shared_ptr<syntax::GenericArgumentList> Parser::parseGenericArgument() {
+    std::shared_ptr<GenericArgumentList> Parser::parseGenericArgument() {
         // generic argument should start with '<'
         auto arguments = std::make_shared<GenericArgumentList>(_tokenIndex);
         auto nextJudgeTokenIndex = getNextNotComment();
@@ -411,6 +524,12 @@ namespace yuuki::compiler::feasy{
         }
     }
 
+    std::shared_ptr<MethodDeclaration>
+    Parser::parseMethodDeclaration(const std::shared_ptr<ModifierList> &modifiers) {
+        auto type = parseType();
+        return nullptr;
+    }
+
     void Parser::splitCurrentMultiCharOperator() {
         std::string_view code = _context->tokens[_tokenIndex]->rawCode;
         std::size_t offset = _context->tokens[_tokenIndex]->offset;
@@ -423,4 +542,67 @@ namespace yuuki::compiler::feasy{
             _context->tokens.insert(_context->tokens.begin() + _tokenIndex + i, std::move(tok));
         }
     }
+
+    bool Parser::skipOverATypeDeclaration() {
+        // a valid type should start with a name like
+        //     Generic<G.T.S>
+        //        ^                         valid!
+        // the judge token in this situation should be next non-comment token (marked by '^')
+        //     Generic /*interline comment*/ <G.T.S>
+        //                                   ^
+        // but in some error cases a type could start just like
+        //     Generic<T1, [ ]>
+        //                 ^                identifier expected,   parse as Generic<T1, unknown[]>
+        //     Generic<T1, <SomeArgument>>
+        //                 ^                identifier expected,   parse as Generic<T1, unknown<SomeArgument>>
+        //     Generic<T1,      +>
+        //                 ↑    ^           unexpected identifier,
+        //                 |                identifier expected,   parse as Generic<T1>
+        // the judge token in this situation should be current token (marked by '^')
+        std::shared_ptr<Type> type;
+        std::size_t nextJudgeTokenIndex = _tokenIndex;
+        if(getCurrentTokenType() == token::TokenType::identifier) {
+            type = std::make_shared<TrivialType>(parseName());
+            nextJudgeTokenIndex = getNextNotComment();
+        } else{
+            // TODO:we should make a identifier expected error here
+            type = std::make_shared<UnknownType>();
+        }
+        switch (getTokenType(nextJudgeTokenIndex)){
+            case token::TokenType::op_less:
+                // move token to the '<' position
+                _tokenIndex = nextJudgeTokenIndex;
+                type = std::make_shared<GenericType>(type,parseGenericArgument());
+                nextJudgeTokenIndex = getNextNotComment();
+                if(getTokenType(nextJudgeTokenIndex) != token::TokenType::l_square)
+                    return true;
+                break;
+            case token::TokenType::l_square:
+                break;
+            default:
+                return true;
+        }
+
+        parseNextArray:
+        _tokenIndex = nextJudgeTokenIndex;
+        type = std::make_shared<ArrayType>(type,_tokenIndex);
+        nextJudgeTokenIndex = getNextNotComment();
+        if(getTokenType(nextJudgeTokenIndex)!=token::TokenType::r_square){
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::IdentifierExpected, _context->syntaxID)
+                    .before(nextJudgeTokenIndex)
+                    .message("']' expected")
+                    .suggestion("insert ']' here")
+                    .build();
+            return false;
+        }
+        _tokenIndex = nextJudgeTokenIndex;
+        std::static_pointer_cast<ArrayType>(type)->setRSquareIndex(_tokenIndex);   // []
+
+        nextJudgeTokenIndex = getNextNotComment();
+        if(getTokenType(nextJudgeTokenIndex) == token::TokenType::l_square){
+            goto parseNextArray;
+        }
+        return true;
+    }
+
 }

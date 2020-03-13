@@ -39,7 +39,7 @@ TEST(Parser,parseGenericInfo){
         Lexer l = Lexer(context, d);
         Parser p = Parser(context, d);
         l.lex();
-        auto gen = p.parseGenericInfo();
+        auto gen = p.parseGenericDeclaration();
     }
     std::cout << *d;
 }
@@ -59,7 +59,7 @@ TEST(Parser,splitCurrentMultiCharOperator){
 }
 
 TEST(Parser,parseType){
-    auto code = "Complicated/*comment*/<yuuki.list<int32[/*comment*/]>,some/*comment*/.great.class1<T>>[][][]";
+    auto code = "Complicated/*comment*/<yuuki.list< int32[/*comment*/]>,some/*comment*/.great.class1<T>>[][][]";
     auto sm = std::make_shared<SyntaxContextManager>();
     auto d = std::make_shared<DiagnosticStream>(sm);
     auto context = sm->create(code);
@@ -67,6 +67,20 @@ TEST(Parser,parseType){
     Parser p = Parser(context,d);
     l.lex();
     auto t = p.parseType();
+    std::cout << *t;
+    std::cout<< *d;
+}
+
+TEST(Parser,parseClassDecl){
+    auto code = "public naive class list<T>:i_enumerable<T>,i_gc_ignored;";
+    auto sm = std::make_shared<SyntaxContextManager>();
+    auto d = std::make_shared<DiagnosticStream>(sm);
+    auto context = sm->create(code);
+    Lexer l = Lexer(context,d);
+    Parser p = Parser(context,d);
+    l.lex();
+    auto mod = p.parseModifiers();
+    auto t = p.parseClass(mod);
     std::cout << *t;
     std::cout<< *d;
 }

@@ -8,12 +8,14 @@ namespace yuuki::compiler::feasy::syntax{
 
     ClassDeclaration::ClassDeclaration(const std::shared_ptr<ModifierList> &mod,
                                        const std::shared_ptr<Name> &name,
-                                       const std::shared_ptr<InheritDeclaration> &inheritInfos,
-                                       const std::shared_ptr<GenericDeclaration> &genericInfos) {
+                                       const std::shared_ptr<GenericDeclaration> &genericInfos,
+                                       const std::shared_ptr<InheritDeclaration> &inheritInfos) {
         _mod = mod;
         _name = name;
         _inheritInfos = inheritInfos;
         _genericInfos = genericInfos;
+        _classTokenIndex = invalidTokenIndex;
+        _semiTokenIndex = invalidTokenIndex;
     }
 
     void ClassDeclaration::add(const std::shared_ptr<MethodDeclaration> &method) {
@@ -82,6 +84,36 @@ namespace yuuki::compiler::feasy::syntax{
 
     bool ClassDeclaration::hasChild() {
         return true;
+    }
+
+    void ClassDeclaration::setClassTokenIndex(std::size_t classTokenIndex) {
+        _classTokenIndex = classTokenIndex;
+    }
+
+    std::size_t ClassDeclaration::start() {
+        if(_mod->hasChild())
+            return _mod->start();
+        if(_classTokenIndex != invalidTokenIndex)
+            return _classTokenIndex;
+        return _name->start();
+    }
+
+    std::size_t ClassDeclaration::end() {
+        if(_members.back()->end()!=invalidTokenIndex){
+            if(_semiTokenIndex != invalidTokenIndex)
+                return _semiTokenIndex;
+            if(_inheritInfos->end() != invalidTokenIndex)
+                return _inheritInfos->end();
+            if(_genericInfos->end() != invalidTokenIndex)
+                return _genericInfos->end();
+            return _name->end();
+        }
+
+        return _members.back()->end();
+    }
+
+    void ClassDeclaration::setSemiTokenIndex(std::size_t semiTokenIndex) {
+        _semiTokenIndex = semiTokenIndex;
     }
 
     void FieldDeclaration::add(const std::shared_ptr<Expression> &declExpr) {

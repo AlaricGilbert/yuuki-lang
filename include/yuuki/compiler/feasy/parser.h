@@ -51,15 +51,20 @@ namespace yuuki::compiler::feasy {
 
         std::shared_ptr<syntax::ModifierList> parseModifiers();
 
-        std::shared_ptr<syntax::ClassDeclaration> parseClass();
+        std::shared_ptr<syntax::ClassDeclaration> parseClass(const std::shared_ptr<syntax::ModifierList>& modifiers);
 
-        std::shared_ptr<syntax::GenericDeclaration> parseGenericInfo();
+        std::shared_ptr<syntax::MethodDeclaration> parseMethodDeclaration(const std::shared_ptr<syntax::ModifierList>& modifiers);
+
+        std::shared_ptr<syntax::GenericDeclaration> parseGenericDeclaration();
 
         std::shared_ptr<syntax::GenericArgumentList> parseGenericArgument();
 
         std::shared_ptr<syntax::Type> parseType();
+        
+        bool skipOverATypeDeclaration();
 
         void splitCurrentMultiCharOperator();
+
 
     private:
 
@@ -92,7 +97,6 @@ namespace yuuki::compiler::feasy {
                     _tokenIndex < _context->tokens.size());
         }
 
-
         inline token::TokenType getCurrentTokenType() {
             return _context->tokens[_tokenIndex]->type;
         }
@@ -105,7 +109,7 @@ namespace yuuki::compiler::feasy {
             return _context->tokens[_tokenIndex + offset]->type;
         }
 
-        std::size_t getFirstNotComment() {
+        inline std::size_t getFirstNotComment() {
             std::size_t pos = _tokenIndex;
             while (getTokenType(pos) == token::TokenType::inline_comment ||
                    getTokenType(pos) == token::TokenType::interline_comment)
@@ -113,7 +117,7 @@ namespace yuuki::compiler::feasy {
             return pos;
         }
 
-        std::size_t getNextNotComment() {
+        inline std::size_t getNextNotComment() {
             if(_tokenIndex >= _context->tokens.size() - 1)
                 return _tokenIndex;
             std::size_t pos = _tokenIndex + 1;
