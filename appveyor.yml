@@ -1,0 +1,16 @@
+version: '{build}'
+
+image: Visual Studio 2019
+
+build_script:
+  - mkdir build
+  - cd build
+  - cmake .. -G"NMake Makefiles"
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+  - nmake
+  - cd ..
+
+test_script:
+  - ps: cd artifacts
+  - yukcorlib_test
+  - cd ..
