@@ -5,6 +5,7 @@
 #include <yuuki/compiler/feasy/code_postion.h>
 #include <string_view>
 #include <vector>
+#include <memory>
 namespace yuuki::compiler::feasy{
     /**
      * An single source-file syntax representation to store analyse mid products

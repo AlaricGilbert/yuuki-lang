@@ -1,4 +1,5 @@
 #include <yuuki/compiler/feasy/syntax_context.h>
+#include <algorithm>
 
 
 namespace yuuki::compiler::feasy{

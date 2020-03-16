@@ -4,5 +4,9 @@ build/
 # clang junks
 .idea/
 cmake-build-debug/
+# msvc junks
+.vs/
+out/
+CMakeSettings.json
 # macOS junk
 .DS_Store
