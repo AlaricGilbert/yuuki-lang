@@ -14,27 +14,6 @@ namespace yuuki::compiler::feasy{
         _tokenIndex = 0;
     }
 
-    void Parser::parseExpression() {
-        static_assert(std::is_base_of<Parser,Parser>::value);
-        // check for unary operators
-        switch (_context->tokens[_tokenIndex]->type){
-            case TokenType::op_minus:
-            case TokenType::op_minusminus:
-            case TokenType::op_plus:
-            case TokenType::op_plusplus:
-            case TokenType::op_tilde:
-            case TokenType::op_exclaim:
-            case TokenType::l_paren:
-            case TokenType::identifier:
-            case TokenType::numeric_const:
-            case TokenType::string_const:
-            case TokenType::false_const:
-            case TokenType::true_const:
-            default:
-                break;
-        }
-    }
-
     void Parser::parse() {
         // the recovery lambda for main parse section
         auto recover = [&]()->void{
@@ -53,10 +32,10 @@ namespace yuuki::compiler::feasy{
             switch (_context->tokens[_tokenIndex]->type){
                 // we are going to handle the main situations in the global syntax unit
                 case TokenType::kw_import:
-                    parseImportDirective();
+                    //parseImportDirective();
                     break;
                 case TokenType::kw_namespace:
-                    parseNamespaceDeclaration();
+                    //parseNamespaceDeclaration();
                     break;
                 // we are going to handle modifiers which may be added to tokens.inc in the future design!
                 // so we use marcos to generate modifier list, codes are generated like:
@@ -144,14 +123,6 @@ namespace yuuki::compiler::feasy{
                     break;
             }
         }
-    }
-
-    void Parser::parseImportDirective() {
-
-    }
-
-    void Parser::parseNamespaceDeclaration() {
-
     }
 
     std::shared_ptr<Name> Parser::parseName() {
@@ -606,14 +577,75 @@ namespace yuuki::compiler::feasy{
         return true;
     }
 
-    std::shared_ptr<syntax::Expression> Parser::parseExpression(int parentPrecedence) {
-        std::size_t nextJudgeTokenIndex = getNextNotComment();
+    /*
+     * It should be noticed that parsePrecedenceExpression is NOT a non-null promised function!
+     * This function should be a private function after expr parse finished!
+     * */
+    std::shared_ptr<syntax::Expression> Parser::parsePrecedenceExpression(std::initializer_list<token::TokenType> endTokens,
+                                                                          int parentPrecedence) {
+        std::size_t nextJudgeTokenIndex = getFirstNotComment();
+        TokenType nextType = getTokenType(nextJudgeTokenIndex);
         std::shared_ptr<Expression> left;
-        if (OperatorUtil::isUnary(getTokenType(nextJudgeTokenIndex)) && OperatorUtil::unary >= parentPrecedence){
+        // we met a unary operator here, we can ensure that a unary expression can be directly parsed
+        // since primary expressions had been directly handled with special codes, and primary expressions
+        // are parsed locally so we can ensure that when we met a unary operator, unary has the highest
+        // privilege
+        if (OperatorUtil::isUnary(nextType) && OperatorUtil::unary <= parentPrecedence) {
             _tokenIndex = nextJudgeTokenIndex;
-            //left = std::make_shared<UnaryExpression>();
+            left = std::make_shared<UnaryExpression>(nextType, nextJudgeTokenIndex,
+                                                     parsePrecedenceExpression(endTokens, OperatorUtil::unary));
+        } else{
+            _tokenIndex = nextJudgeTokenIndex;
+            switch (nextType){
+                case TokenType::l_paren: {
+                    // TODO: handle with parenExpressions and type convert expressions
+                    break;
+                }
+                case TokenType::identifier: {
+                    left = std::make_shared<NameExpression>(parseName());
+                    break;
+                }
+                case TokenType::kw_new: {
+                    // TODO: handle with new expr;
+                    auto type = parseType();
+                    break;
+                }
+                default:
+                    //TODO: error handling.
+                    break;
+            }
         }
-        return std::shared_ptr<syntax::Expression>();
+        while (true){
+            nextJudgeTokenIndex = getNextNotComment();
+            nextType = getTokenType(nextJudgeTokenIndex);
+            parsePrimary:
+            switch (nextType){
+                case token::TokenType::l_square:
+                    break;
+                case token::TokenType::l_paren:
+                    break;
+                default:
+                    break;
+            }
+            // for context sensitive situations like
+            //    obj.method<Type>()
+            //              ^ should be parsed in primary precedence as '('.
+            if(nextType == token::TokenType::op_less){
+
+            }
+
+            // we are now going to handle with binary expressions
+            auto precedence = OperatorUtil::getBinaryOperatorPrecedence(nextType);
+            if(precedence == OperatorUtil::initial)
+                break;
+            if(precedence >= parentPrecedence && precedence != OperatorUtil::assignment)
+                break;
+            _tokenIndex = nextJudgeTokenIndex;
+            _tokenIndex = getNextNotComment();
+            auto right = parsePrecedenceExpression(endTokens,precedence);
+            left = std::make_shared<BinaryExpression>(left,nextType,nextJudgeTokenIndex,right);
+        }
+        return left;
     }
 
 }

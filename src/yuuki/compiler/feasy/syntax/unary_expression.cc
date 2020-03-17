@@ -10,8 +10,10 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     UnaryExpression::UnaryExpression(token::TokenType operatorType,
+                                     std::size_t opIndex,
                                      const std::shared_ptr<Expression>& right) {
         _right = right;
+        _opIndex = opIndex;
         _operatorType = operatorType;
     }
 
@@ -43,5 +45,13 @@ namespace yuuki::compiler::feasy::syntax{
 
     bool UnaryExpression::hasChild() {
         return true;
+    }
+
+    std::size_t UnaryExpression::start() {
+        return _opIndex;
+    }
+
+    std::size_t UnaryExpression::end() {
+        return _right->end();
     }
 }

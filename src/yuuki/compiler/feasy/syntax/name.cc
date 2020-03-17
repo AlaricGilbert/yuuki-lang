@@ -118,4 +118,12 @@ namespace yuuki::compiler::feasy::syntax{
     void NameExpression::analyseType() {
 
     }
+
+    std::size_t NameExpression::start() {
+        return _name->start();
+    }
+
+    std::size_t NameExpression::end() {
+        return _name->end();
+    }
 }

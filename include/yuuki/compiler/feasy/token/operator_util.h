@@ -24,7 +24,9 @@ namespace yuuki::compiler::feasy::token {
             conditional_or,
             // right-combined:
             conditional,
-            assignment
+            assignment,
+            // initial
+            initial
         };
         static bool isUnary(TokenType type);
         static bool isPrimary(TokenType type);

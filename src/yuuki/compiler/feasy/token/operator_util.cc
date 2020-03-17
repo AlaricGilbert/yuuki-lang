@@ -78,6 +78,8 @@ namespace yuuki::compiler::feasy::token{
             case TokenType::op_careteq:
             case TokenType::op_pipeeq:
                 return assignment;
+            default:
+                return initial;
         }
     }
 }

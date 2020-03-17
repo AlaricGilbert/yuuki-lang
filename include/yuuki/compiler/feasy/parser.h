@@ -8,6 +8,7 @@
 #include <yuuki/compiler/feasy/syntax/name.h>
 #include <yuuki/compiler/feasy/syntax/namespace_declaration.h>
 #include <yuuki/compiler/feasy/syntax/unary_expression.h>
+#include <yuuki/compiler/feasy/token/operator_util.h>
 /**
  * Parser [WIP]
  *   To accelerate the development speed and make functions flavour unify, temporarily add a basic rule as a notification:
@@ -39,12 +40,6 @@ namespace yuuki::compiler::feasy {
 
         void parse();
 
-        void parseImportDirective();
-
-        void parseNamespaceDeclaration();
-
-        void parseExpression();
-
         std::shared_ptr<syntax::Name> parseName();
 
         std::shared_ptr<syntax::IdentifierName> parseIdentifier();
@@ -61,7 +56,9 @@ namespace yuuki::compiler::feasy {
 
         std::shared_ptr<syntax::Type> parseType();
 
-        std::shared_ptr<syntax::Expression> parseExpression(int parentPrecedence = 0);
+        std::shared_ptr<syntax::Expression> parseExpression();
+        std::shared_ptr<syntax::Expression> parsePrecedenceExpression(std::initializer_list<token::TokenType> endTokens,
+                                                                      int parentPrecedence = token::OperatorUtil::initial);
 
         bool skipOverATypeDeclaration();
 

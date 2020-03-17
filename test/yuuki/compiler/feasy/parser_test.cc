@@ -84,3 +84,16 @@ TEST(Parser,parseClassDecl){
     std::cout << *t;
     std::cout<< *d;
 }
+
+TEST(Parser,parsePrecedenceExpr){
+    auto code = "a * b + c.def * m >> k";
+    auto sm = std::make_shared<SyntaxContextManager>();
+    auto d = std::make_shared<DiagnosticStream>(sm);
+    auto context = sm->create(code);
+    Lexer l = Lexer(context,d);
+    Parser p = Parser(context,d);
+    l.lex();
+    auto t = p.parsePrecedenceExpression({});
+    std::cout << *t;
+    std::cout<< *d;
+}

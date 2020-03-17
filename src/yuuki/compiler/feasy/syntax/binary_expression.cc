@@ -10,11 +10,14 @@ namespace yuuki::compiler::feasy::syntax{
         syntaxWalker(_right, true);
     }
 
-    BinaryExpression::BinaryExpression(const std::shared_ptr<Expression>& left, token::TokenType operatorType,
+    BinaryExpression::BinaryExpression(const std::shared_ptr<Expression>& left,
+                                       token::TokenType operatorType,
+                                       std::size_t opIndex,
                                        const std::shared_ptr<Expression>& right) {
         _left = left;
         _right = right;
         _operatorType = operatorType;
+        _opIndex = opIndex;
     }
 
     token::TokenType BinaryExpression::getOperatorType() {
@@ -45,5 +48,13 @@ namespace yuuki::compiler::feasy::syntax{
 
     bool BinaryExpression::hasChild() {
         return true;
+    }
+
+    std::size_t BinaryExpression::start() {
+        return _left->start();
+    }
+
+    std::size_t BinaryExpression::end() {
+        return _right->end();
     }
 }
