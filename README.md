@@ -1,4 +1,5 @@
-# Yuuki Language  ![](https://api.travis-ci.com/AlaricGilbert/yuuki-lang.svg?branch=master)
+# Yuuki Language  ![](https://api.travis-ci.com/AlaricGilbert/yuuki-lang.svg?branch=master) ![](https://ci.appveyor.com/api/projects/status/github/AlaricGilbert/yuuki-lang?svg=true)
+
 * A super light weight language that supports generic OOP programming which developed during study compile principle.
 
 ## TODO-List
