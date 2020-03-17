@@ -8,16 +8,20 @@ clone_script:
       && cd %APPVEYOR_BUILD_FOLDER%
       && git checkout -qf %APPVEYOR_REPO_COMMIT%
       && git submodule update --init --recursive
-      
+
 build_script:
   - mkdir build
   - cd build
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-  - cmake .. -G"NMake Makefiles"
-  - nmake
+  - cmake ..
+  - msbuild ALL 
   - cd ..
 
 test_script:
   - ps: cd artifacts
   - yukcorlib_test
   - cd ..
+
+artifacts:
+  - path: artifacts
+    name: "yuuki-lang-windows-$(APPVEYOR_BUILD_VERSION)"
