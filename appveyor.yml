@@ -13,8 +13,8 @@ build_script:
   - mkdir build
   - cd build
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-  - cmake ..
-  - msbuild ALL 
+  - cmake .. -G"NMake Makefiles"
+  - nmake
   - cd ..
 
 test_script:
