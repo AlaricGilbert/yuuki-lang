@@ -60,7 +60,9 @@ namespace yuuki::compiler::feasy {
         std::shared_ptr<syntax::GenericArgumentList> parseGenericArgument();
 
         std::shared_ptr<syntax::Type> parseType();
-        
+
+        std::shared_ptr<syntax::Expression> parseExpression(int parentPrecedence = 0);
+
         bool skipOverATypeDeclaration();
 
         void splitCurrentMultiCharOperator();

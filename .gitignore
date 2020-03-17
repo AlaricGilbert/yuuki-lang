@@ -4,6 +4,9 @@ build/
 # clang junks
 .idea/
 cmake-build-debug/
+# vs junks
+.vs/
+out/
 # vscode junks
 .vscode/
 # macOS junk

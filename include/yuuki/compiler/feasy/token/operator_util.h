@@ -8,23 +8,27 @@ namespace yuuki::compiler::feasy::token {
     private:
         OperatorUtil() = delete; /* NOLINT */
     public:
-        enum class OpType{
+        enum {
+            // left-combined:
             primary = 1,
-            unary = 2,
-            multiplicative = 3,
-            addition = 4,
-            shift = 5,
-            relational = 6,
-            equality = 7,
-            logical_and = 8,
-            logical_xor = 9,
-            logical_or = 10,
-            conditional_and = 11,
-            conditional_or = 12,
-            conditional = 13,
-            assignment = 14
+            unary,
+            multiplicative,
+            addition,
+            shift,
+            relational,
+            equality,
+            logical_and,
+            logical_xor,
+            logical_or,
+            conditional_and,
+            conditional_or,
+            // right-combined:
+            conditional,
+            assignment
         };
-        static OpType getType(TokenType t);
+        static bool isUnary(TokenType type);
+        static bool isPrimary(TokenType type);
+        static std::size_t getBinaryOperatorPrecedence(TokenType type);
     };
 }
 #endif //YUUKI_OPERATOR_UTIL_H

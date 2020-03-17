@@ -1,5 +1,6 @@
 #include <yuuki/compiler/feasy/parser.h>
 #include <yuuki/compiler/feasy/token/token_util.h>
+#include <yuuki/compiler/feasy/token/operator_util.h>
 #include <yuuki/compiler/feasy/syntax/generic_type.h>
 #include <yuuki/compiler/diagnostics/diagnostic_builder.h>
 namespace yuuki::compiler::feasy{
@@ -603,6 +604,16 @@ namespace yuuki::compiler::feasy{
             goto parseNextArray;
         }
         return true;
+    }
+
+    std::shared_ptr<syntax::Expression> Parser::parseExpression(int parentPrecedence) {
+        std::size_t nextJudgeTokenIndex = getNextNotComment();
+        std::shared_ptr<Expression> left;
+        if (OperatorUtil::isUnary(getTokenType(nextJudgeTokenIndex)) && OperatorUtil::unary >= parentPrecedence){
+            _tokenIndex = nextJudgeTokenIndex;
+            //left = std::make_shared<UnaryExpression>();
+        }
+        return std::shared_ptr<syntax::Expression>();
     }
 
 }

@@ -36,6 +36,12 @@ namespace yuuki::compiler::feasy::syntax{
         BinaryExpression,
         UnaryExpression,
         NameExpression,
+        ThisExpression,
+        StringLiteralExpression,
+        NumericLiteralExpression,
+        CallExpression,
+        IndexExpression,
+
 
         InlineComment,
         InterlineComment,

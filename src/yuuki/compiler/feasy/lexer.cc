@@ -320,16 +320,17 @@ namespace yuuki::compiler::feasy{
     }
 
     bool Lexer::lexIdentifier(size_t offset) {
-        // normal identifier
-        if ((_code[_position + offset] == '_') ||
-            (('A' <= _code[_position + offset]) && (_code[_position + offset] <= 'Z')) ||
-            (('a' <= _code[_position + offset]) && (_code[_position + offset] <= 'z')) ||
-            (('0' <= _code[_position + offset]) && (_code[_position + offset] <= '9')))
-            return lexIdentifier(offset + 1);
-        // unicode identifier
-        if ((((unsigned char) _code[_position + offset]) > 127) && isUnicodeCharValidOfIdentifier())
-            return lexIdentifier(offset + 1);
-
+        if (_code.size() > _position + offset) {
+            // normal identifier
+            if ((_code[_position + offset] == '_') ||
+                (('A' <= _code[_position + offset]) && (_code[_position + offset] <= 'Z')) ||
+                (('a' <= _code[_position + offset]) && (_code[_position + offset] <= 'z')) ||
+                (('0' <= _code[_position + offset]) && (_code[_position + offset] <= '9')))
+                return lexIdentifier(offset + 1);
+            // unicode identifier
+            if ((((unsigned char)_code[_position + offset]) > 127) && isUnicodeCharValidOfIdentifier())
+                return lexIdentifier(offset + 1);
+        }
         auto token = std::make_unique<token::Token>();
         token->offset = _position;
         token->rawCode = _code.substr(_position, offset);

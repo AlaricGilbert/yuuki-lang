@@ -11,7 +11,7 @@ namespace yuuki::compiler::feasy::syntax{
         void writeCurrentInfo(std::ostream& ostream) override = 0;
         SyntaxType getType() override = 0;
         bool hasChild() override = 0;
-
     };
+
 }
 #endif //YUUKI_EXPRESSION_H
