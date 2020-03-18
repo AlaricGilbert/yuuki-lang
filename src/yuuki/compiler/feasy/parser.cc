@@ -576,6 +576,20 @@ namespace yuuki::compiler::feasy{
                     left = std::make_shared<NameExpression>(parseName());
                     break;
                 }
+                case TokenType::kw_this:{
+                    left = std::make_shared<ThisExpression>(_tokenIndex);
+                    break;
+                }
+                case TokenType::string_const:{
+                    left = std::make_shared<StringLiteralExpression>(_tokenIndex,
+                            _context->tokens[_tokenIndex]->rawCode);
+                    break;
+                }
+                case TokenType::numeric_const:{
+                    left = std::make_shared<NumericLiteralExpression>(_tokenIndex,
+                                                                     _context->tokens[_tokenIndex]->rawCode);
+                    break;
+                }
                 case TokenType::kw_new: {
                     // TODO: handle with new expr;
                     auto type = parseType();
@@ -628,20 +642,87 @@ namespace yuuki::compiler::feasy{
                     } else{
                         left = std::make_shared<IndexExpression>(left,index,lSquare);
                         move(endTokens);
-                        // TODO: throw ] expected
+                        // TODO: push ] expected
                     }
                     break;
                 }
-                case token::TokenType::l_paren:
+                case token::TokenType::l_paren: {
+                    // we are going to handle trivial method calls here
+                    // make a copy of end tokens
+                    auto newEndTokens = endTokens;
+                    newEndTokens.push_back(TokenType::r_paren);
+                    _tokenIndex = nextJudgeTokenIndex;
+                    auto callExpr = std::make_shared<CallExpression>(_tokenIndex,left);
+                    parseNextParam:
+                    _tokenIndex = getNextNotComment();
+                    auto para = parsePrecedenceExpression(newEndTokens);
+                    callExpr->add(para);
+                    nextJudgeTokenIndex = getNextNotComment();
+                    switch (getTokenType(nextJudgeTokenIndex)){
+                        case token::TokenType::comma:
+                            _tokenIndex = nextJudgeTokenIndex;
+                            goto parseNextParam;
+                        case token::TokenType::r_paren:
+                            _tokenIndex = nextJudgeTokenIndex;
+                            callExpr->setRParenIndex(_tokenIndex);
+                            break;
+                        default:
+                            //TODO: push ')' expected.
+                            move(endTokens);
+                    }
+                    left = callExpr;
                     break;
+                }
                 default:
                     break;
             }
+            std::size_t tokenBeforeArgTest = _tokenIndex;
             // for context sensitive situations like
             //    obj.method<Type>()
             //              ^ should be parsed in primary precedence as '('.
             if(nextType == token::TokenType::op_less){
+                _tokenIndex = nextJudgeTokenIndex;
+                std::size_t lessTokenIndex = nextJudgeTokenIndex;
+                if(skipOverAGenericArgument()){
+                    _tokenIndex = getNextNotComment();
+                    if(getCurrentTokenType() == TokenType::l_paren){
+                        // matches the situation
+                        auto newEndTokens = endTokens;
+                        newEndTokens.push_back(TokenType::r_paren);
+                        _tokenIndex = lessTokenIndex;
+                        auto genericArg = parseGenericArgument();
+                        // move to '('
+                        _tokenIndex = getNextNotComment();
 
+                        auto callExpr = std::make_shared<GenericCallExpression>(_tokenIndex,left,genericArg);
+                        parseNextParam_:
+                        _tokenIndex = getNextNotComment();
+                        auto para = parsePrecedenceExpression(newEndTokens);
+                        callExpr->add(para);
+                        nextJudgeTokenIndex = getNextNotComment();
+                        switch (getTokenType(nextJudgeTokenIndex)){
+                            case token::TokenType::comma:
+                                _tokenIndex = nextJudgeTokenIndex;
+                                goto parseNextParam_;
+                            case token::TokenType::r_paren:
+                                _tokenIndex = nextJudgeTokenIndex;
+                                callExpr->setRParenIndex(_tokenIndex);
+                                break;
+                            default:
+                                //TODO: push ')' expected.
+                                move(endTokens);
+                        }
+                        left = callExpr;
+                    } else{
+                        _tokenIndex = tokenBeforeArgTest;
+                        nextJudgeTokenIndex = getNextNotComment();
+                        nextType = getTokenType(nextJudgeTokenIndex);
+                    }
+                } else{
+                    _tokenIndex = tokenBeforeArgTest;
+                    nextJudgeTokenIndex = getNextNotComment();
+                    nextType = getTokenType(nextJudgeTokenIndex);
+                }
             }
 
             // we are now going to handle with binary expressions

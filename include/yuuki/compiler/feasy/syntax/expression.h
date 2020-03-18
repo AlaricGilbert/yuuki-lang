@@ -4,6 +4,7 @@
 #include <yuuki/compiler/feasy/syntax/syntax_node.h>
 #include <yuuki/compiler/feasy/syntax/name.h>
 #include <yuuki/compiler/feasy/syntax/type.h>
+#include <yuuki/compiler/feasy/syntax/generic.h>
 #include <yuuki/compiler/feasy/token/token_type.h>
 
 namespace yuuki::compiler::feasy::syntax{
@@ -125,5 +126,100 @@ namespace yuuki::compiler::feasy::syntax{
         std::shared_ptr<Expression> _operand;
     };
 
+    class CallExpression: public Expression, public ISyntaxList<Expression> {
+    public:
+        explicit CallExpression(std::size_t lParenIndex, const std::shared_ptr<Expression> &method,
+                                std::size_t rParenIndex = invalidTokenIndex);
+        void setRParenIndex(std::size_t rParenIndex);
+        void add(const std::shared_ptr<Expression> &child) override;
+        void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void writeCurrentInfo(std::ostream &ostream) override;
+        SyntaxType getType() override;
+        std::size_t start() override;
+        std::size_t end() override;
+        bool hasChild() override;
+        void analyseType() override;
+        std::string toString() override;
+
+    private:
+        std::shared_ptr<Expression> _method;
+        std::vector<std::shared_ptr<Expression>> _arguments;
+        std::size_t _lParenIndex;
+        std::size_t _rParenIndex;
+    };
+
+    class ThisExpression:public Expression{
+    public:
+        explicit ThisExpression(std::size_t thisIndex);
+        void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void writeCurrentInfo(std::ostream &ostream) override;
+        SyntaxType getType() override;
+        std::size_t start() override;
+        std::size_t end() override;
+        bool hasChild() override;
+        void analyseType() override;
+        std::string toString() override;
+
+    private:
+        std::size_t _thisIndex;
+    };
+
+    class StringLiteralExpression:public Expression{
+    public:
+        StringLiteralExpression(std::size_t stringIndex,const std::string_view&rawCode);
+        void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void writeCurrentInfo(std::ostream &ostream) override;
+        SyntaxType getType() override;
+        std::size_t start() override;
+        std::size_t end() override;
+        bool hasChild() override;
+        void analyseType() override;
+        std::string toString() override;
+
+    private:
+        std::size_t _stringIndex;
+        std::string_view _rawCode;
+    };
+
+    class NumericLiteralExpression:public Expression{
+    public:
+        NumericLiteralExpression(std::size_t numericIndex,const std::string_view&rawCode);
+        void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void writeCurrentInfo(std::ostream &ostream) override;
+        SyntaxType getType() override;
+        std::size_t start() override;
+        std::size_t end() override;
+        bool hasChild() override;
+        void analyseType() override;
+        std::string toString() override;
+
+    private:
+        std::size_t _numericIndex;
+        std::string_view _rawCode;
+    };
+
+    class GenericCallExpression: public Expression, public ISyntaxList<Expression> {
+    public:
+        explicit GenericCallExpression(std::size_t lParenIndex, const std::shared_ptr<Expression> &method,
+                const std::shared_ptr<GenericArgumentList>& genericArgList,
+                std::size_t rParenIndex = invalidTokenIndex);
+        void setRParenIndex(std::size_t rParenIndex);
+        void add(const std::shared_ptr<Expression> &child) override;
+        void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void writeCurrentInfo(std::ostream &ostream) override;
+        SyntaxType getType() override;
+        std::size_t start() override;
+        std::size_t end() override;
+        bool hasChild() override;
+        void analyseType() override;
+        std::string toString() override;
+
+    private:
+        std::shared_ptr<Expression> _method;
+        std::shared_ptr<GenericArgumentList> _genericArgList;
+        std::vector<std::shared_ptr<Expression>> _arguments;
+        std::size_t _lParenIndex;
+        std::size_t _rParenIndex;
+    };
 }
 #endif //YUUKI_EXPRESSION_H

@@ -42,6 +42,7 @@ namespace yuuki::compiler::feasy::syntax{
         StringLiteralExpression,
         NumericLiteralExpression,
         CallExpression,
+        GenericCallExpression,
         IndexExpression,
         ParenthesesExpression,
         PostfixExpression,

@@ -89,6 +89,9 @@ namespace yuuki::compiler::feasy::syntax{
             case SyntaxType::CallExpression:
                 s<<"CallExpression";
                 break;
+            case SyntaxType::GenericCallExpression:
+                s<<"GenericCallExpression";
+                break;
             case SyntaxType::IndexExpression:
                 s<<"IndexExpression";
                 break;

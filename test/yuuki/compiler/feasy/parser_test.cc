@@ -86,7 +86,7 @@ TEST(Parser,parseClassDecl){
 }
 
 TEST(Parser,parsePrecedenceExpr){
-    auto code = "(vec2<int>)(a[x++][l].member * ~b) + (c.def * m >> k)";
+    auto code = "(vec2<int>)(a[x++][l].member * ~b.method(p[h],2.3,\"str\")).genMethod<int[],Type<T>>(1) +b1<b2>b3+ (c.def * m >> this)";
     auto sm = std::make_shared<SyntaxContextManager>();
     auto d = std::make_shared<DiagnosticStream>(sm);
     auto context = sm->create(code);

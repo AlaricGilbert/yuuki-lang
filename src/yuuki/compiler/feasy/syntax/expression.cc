@@ -265,4 +265,247 @@ namespace yuuki::compiler::feasy::syntax {
     std::string PostfixExpression::toString() {
         return _operand->toString() + token::TokenUtil::getSpell(_operatorType);
     }
+
+    CallExpression::CallExpression(std::size_t lParenIndex,const std::shared_ptr<Expression>& method, std::size_t rParenIndex) {
+        _lParenIndex = lParenIndex;
+        _method = method;
+        _rParenIndex = rParenIndex;
+    }
+
+    void CallExpression::add(const std::shared_ptr<Expression> &child) {
+        _arguments.push_back(child);
+    }
+
+    void CallExpression::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+        syntaxWalker(_method,_arguments.empty());
+        for (std::size_t i = 0; i < _arguments.size(); ++i) {
+            syntaxWalker(_arguments[i], i == _arguments.size() - 1);
+        }
+    }
+
+    void CallExpression::writeCurrentInfo(std::ostream &ostream) {
+        Expression::writeCurrentInfo(ostream);
+    }
+
+    SyntaxType CallExpression::getType() {
+        return SyntaxType::CallExpression;
+    }
+
+    std::size_t CallExpression::start() {
+        if(_method->getType() != SyntaxType::NullExpression)
+            return _method->start();
+        return _lParenIndex;
+    }
+
+    std::size_t CallExpression::end() {
+        if(_rParenIndex!=invalidTokenIndex)
+            return _rParenIndex;
+        if(!_arguments.empty()){
+            for(std::size_t i = 0; i <= _arguments.size(); i++){
+                if(_arguments[_arguments.size() - i]->getType() != SyntaxType::NullExpression)
+                    return _arguments[_arguments.size() - i]->end();
+            }
+        }
+        return _lParenIndex;
+    }
+
+    bool CallExpression::hasChild() {
+        return true;
+    }
+
+    void CallExpression::analyseType() {
+
+    }
+
+    std::string CallExpression::toString() {
+        std::string result = _method->toString() + "(";
+        for (std::size_t i = 0; i < _arguments.size(); ++i) {
+            result += _arguments[i]->toString();
+            if (i != _arguments.size() - 1)
+                result += ", ";
+        }
+        return result+")";
+    }
+
+    void CallExpression::setRParenIndex(std::size_t rParenIndex) {
+        _rParenIndex = rParenIndex;
+    }
+
+    ThisExpression::ThisExpression(std::size_t thisIndex) {
+        _thisIndex = thisIndex;
+    }
+
+    void ThisExpression::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+    }
+
+    void ThisExpression::writeCurrentInfo(std::ostream &ostream) {
+        Expression::writeCurrentInfo(ostream);
+    }
+
+    SyntaxType ThisExpression::getType() {
+        return SyntaxType::ThisExpression;
+    }
+
+    std::size_t ThisExpression::start() {
+        return _thisIndex;
+    }
+
+    std::size_t ThisExpression::end() {
+        return _thisIndex;
+    }
+
+    bool ThisExpression::hasChild() {
+        return false;
+    }
+
+    void ThisExpression::analyseType() {
+
+    }
+
+    std::string ThisExpression::toString() {
+        return "this";
+    }
+
+    StringLiteralExpression::StringLiteralExpression(std::size_t stringIndex, const std::string_view &rawCode) {
+        _stringIndex = stringIndex;
+        _rawCode = rawCode;
+    }
+
+    void
+    StringLiteralExpression::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+    }
+
+    void StringLiteralExpression::writeCurrentInfo(std::ostream &ostream) {
+        Expression::writeCurrentInfo(ostream);
+    }
+
+    SyntaxType StringLiteralExpression::getType() {
+        return SyntaxType::StringLiteralExpression;
+    }
+
+    std::size_t StringLiteralExpression::start() {
+        return _stringIndex;
+    }
+
+    std::size_t StringLiteralExpression::end() {
+        return _stringIndex;
+    }
+
+    bool StringLiteralExpression::hasChild() {
+        return false;
+    }
+
+    void StringLiteralExpression::analyseType() {
+
+    }
+
+    std::string StringLiteralExpression::toString() {
+        return "\"" + (std::string) _rawCode + "\"";
+    }
+
+    NumericLiteralExpression::NumericLiteralExpression(std::size_t numericIndex, const std::string_view &rawCode) {
+        _numericIndex = numericIndex;
+        _rawCode = rawCode;
+    }
+
+    void
+    NumericLiteralExpression::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+    }
+
+    void NumericLiteralExpression::writeCurrentInfo(std::ostream &ostream) {
+        Expression::writeCurrentInfo(ostream);
+    }
+
+    SyntaxType NumericLiteralExpression::getType() {
+        return SyntaxType::NumericLiteralExpression;
+    }
+
+    std::size_t NumericLiteralExpression::start() {
+        return _numericIndex;
+    }
+
+    std::size_t NumericLiteralExpression::end() {
+        return _numericIndex;
+    }
+
+    bool NumericLiteralExpression::hasChild() {
+        return false;
+    }
+
+    void NumericLiteralExpression::analyseType() {
+
+    }
+
+    std::string NumericLiteralExpression::toString() {
+        return (std::string) _rawCode;
+    }
+
+    GenericCallExpression::GenericCallExpression(std::size_t lParenIndex, const std::shared_ptr<Expression> &method,
+                                                 const std::shared_ptr<GenericArgumentList> &genericArgList,
+                                                 std::size_t rParenIndex) {
+        _lParenIndex = lParenIndex;
+        _method = method;
+        _genericArgList = genericArgList;
+        _rParenIndex = rParenIndex;
+    }
+
+    void GenericCallExpression::setRParenIndex(std::size_t rParenIndex) {
+        _rParenIndex = rParenIndex;
+    }
+
+    void GenericCallExpression::add(const std::shared_ptr<Expression> &child) {
+        _arguments.push_back(child);
+    }
+
+    void GenericCallExpression::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+        syntaxWalker(_method, false);
+        syntaxWalker(_genericArgList,_arguments.empty());
+        for (std::size_t i = 0; i < _arguments.size(); ++i) {
+            syntaxWalker(_arguments[i], i == _arguments.size() - 1);
+        }
+    }
+
+    void GenericCallExpression::writeCurrentInfo(std::ostream &ostream) {
+        Expression::writeCurrentInfo(ostream);
+    }
+
+    SyntaxType GenericCallExpression::getType() {
+        return SyntaxType::GenericArgumentList;
+    }
+
+    std::size_t GenericCallExpression::start() {
+        if(_method->getType() != SyntaxType::NullExpression)
+            return _method->start();
+        return _genericArgList->start();
+    }
+
+    std::size_t GenericCallExpression::end() {
+        if(_rParenIndex!=invalidTokenIndex)
+            return _rParenIndex;
+        if(!_arguments.empty()){
+            for(std::size_t i = 0; i <= _arguments.size(); i++){
+                if(_arguments[_arguments.size() - i]->getType() != SyntaxType::NullExpression)
+                    return _arguments[_arguments.size() - i]->end();
+            }
+        }
+        return _lParenIndex;
+    }
+
+    bool GenericCallExpression::hasChild() {
+        return true;
+    }
+
+    void GenericCallExpression::analyseType() {
+
+    }
+
+    std::string GenericCallExpression::toString() {
+        std::string result = _method->toString() + _genericArgList->toString() + "(";
+        for (std::size_t i = 0; i < _arguments.size(); ++i) {
+            result += _arguments[i]->toString();
+            if (i != _arguments.size() - 1)
+                result += ", ";
+        }
+        return result+")";
+    }
 }
