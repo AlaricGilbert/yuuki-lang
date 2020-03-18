@@ -88,42 +88,4 @@ namespace yuuki::compiler::feasy::syntax{
         return _right->end();
     }
 
-    NameExpression::NameExpression(const std::shared_ptr<Name>& name) {
-        _name = name;
-    }
-
-    void NameExpression::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
-        syntaxWalker(_name, true);
-    }
-
-    void NameExpression::writeCurrentInfo(std::ostream &s) {
-        if(s.rdbuf() == std::cout.rdbuf()){
-            s << rang::fg::gray     << "NameExpression "
-              << rang::fg::yellow   << "<" << this << "> "
-              << rang::fg::reset    << std::endl;
-        } else{
-            s << "NameExpression "
-              << "<" << this << "> " << std::endl;
-        }
-    }
-
-    SyntaxType NameExpression::getType() {
-        return SyntaxType::NameExpression;
-    }
-
-    bool NameExpression::hasChild() {
-        return true;
-    }
-
-    void NameExpression::analyseType() {
-
-    }
-
-    std::size_t NameExpression::start() {
-        return _name->start();
-    }
-
-    std::size_t NameExpression::end() {
-        return _name->end();
-    }
 }

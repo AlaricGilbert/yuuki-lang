@@ -68,7 +68,7 @@ TEST(Parser,parseType){
     l.lex();
     auto t = p.parseType();
     std::cout << *t;
-    std::cout<< *d;
+    std::cout << *d;
 }
 
 TEST(Parser,parseClassDecl){
@@ -82,11 +82,11 @@ TEST(Parser,parseClassDecl){
     auto mod = p.parseModifiers();
     auto t = p.parseClass(mod);
     std::cout << *t;
-    std::cout<< *d;
+    std::cout << *d;
 }
 
 TEST(Parser,parsePrecedenceExpr){
-    auto code = "a * b + c.def * m >> k";
+    auto code = "(vec2<int>)(a[x++][l].member * ~b) + (c.def * m >> k)";
     auto sm = std::make_shared<SyntaxContextManager>();
     auto d = std::make_shared<DiagnosticStream>(sm);
     auto context = sm->create(code);
@@ -95,5 +95,5 @@ TEST(Parser,parsePrecedenceExpr){
     l.lex();
     auto t = p.parsePrecedenceExpression({});
     std::cout << *t;
-    std::cout<< *d;
+    std::cout << *d;
 }

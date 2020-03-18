@@ -29,6 +29,9 @@ namespace yuuki::compiler::feasy::token{
 
     std::size_t OperatorUtil::getBinaryOperatorPrecedence(TokenType type) {
         switch (type){
+            // Access
+            case TokenType::op_period:
+                return primary;
             // Multiple
             case TokenType::op_multi:
             case TokenType::op_slash:

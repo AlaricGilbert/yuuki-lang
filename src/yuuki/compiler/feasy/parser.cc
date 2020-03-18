@@ -515,73 +515,7 @@ namespace yuuki::compiler::feasy{
         }
     }
 
-    bool Parser::skipOverATypeDeclaration() {
-        // a valid type should start with a name like
-        //     Generic<G.T.S>
-        //        ^                         valid!
-        // the judge token in this situation should be next non-comment token (marked by '^')
-        //     Generic /*interline comment*/ <G.T.S>
-        //                                   ^
-        // but in some error cases a type could start just like
-        //     Generic<T1, [ ]>
-        //                 ^                identifier expected,   parse as Generic<T1, unknown[]>
-        //     Generic<T1, <SomeArgument>>
-        //                 ^                identifier expected,   parse as Generic<T1, unknown<SomeArgument>>
-        //     Generic<T1,      +>
-        //                 ↑    ^           unexpected identifier,
-        //                 |                identifier expected,   parse as Generic<T1>
-        // the judge token in this situation should be current token (marked by '^')
-        std::shared_ptr<Type> type;
-        std::size_t nextJudgeTokenIndex = _tokenIndex;
-        if(getCurrentTokenType() == token::TokenType::identifier) {
-            type = std::make_shared<TrivialType>(parseName());
-            nextJudgeTokenIndex = getNextNotComment();
-        } else{
-            // TODO:we should make a identifier expected error here
-            type = std::make_shared<UnknownType>();
-        }
-        switch (getTokenType(nextJudgeTokenIndex)){
-            case token::TokenType::op_less:
-                // move token to the '<' position
-                _tokenIndex = nextJudgeTokenIndex;
-                type = std::make_shared<GenericType>(type,parseGenericArgument());
-                nextJudgeTokenIndex = getNextNotComment();
-                if(getTokenType(nextJudgeTokenIndex) != token::TokenType::l_square)
-                    return true;
-                break;
-            case token::TokenType::l_square:
-                break;
-            default:
-                return true;
-        }
-
-        parseNextArray:
-        _tokenIndex = nextJudgeTokenIndex;
-        type = std::make_shared<ArrayType>(type,_tokenIndex);
-        nextJudgeTokenIndex = getNextNotComment();
-        if(getTokenType(nextJudgeTokenIndex)!=token::TokenType::r_square){
-            _diagnosticStream << DiagnosticBuilder::error(CompileError::IdentifierExpected, _context->syntaxID)
-                    .before(nextJudgeTokenIndex)
-                    .message("']' expected")
-                    .suggestion("insert ']' here")
-                    .build();
-            return false;
-        }
-        _tokenIndex = nextJudgeTokenIndex;
-        std::static_pointer_cast<ArrayType>(type)->setRSquareIndex(_tokenIndex);   // []
-
-        nextJudgeTokenIndex = getNextNotComment();
-        if(getTokenType(nextJudgeTokenIndex) == token::TokenType::l_square){
-            goto parseNextArray;
-        }
-        return true;
-    }
-
-    /*
-     * It should be noticed that parsePrecedenceExpression is NOT a non-null promised function!
-     * This function should be a private function after expr parse finished!
-     * */
-    std::shared_ptr<syntax::Expression> Parser::parsePrecedenceExpression(std::initializer_list<token::TokenType> endTokens,
+    std::shared_ptr<syntax::Expression> Parser::parsePrecedenceExpression(std::list<token::TokenType> endTokens,
                                                                           int parentPrecedence) {
         std::size_t nextJudgeTokenIndex = getFirstNotComment();
         TokenType nextType = getTokenType(nextJudgeTokenIndex);
@@ -592,13 +526,50 @@ namespace yuuki::compiler::feasy{
         // privilege
         if (OperatorUtil::isUnary(nextType) && OperatorUtil::unary <= parentPrecedence) {
             _tokenIndex = nextJudgeTokenIndex;
-            left = std::make_shared<UnaryExpression>(nextType, nextJudgeTokenIndex,
-                                                     parsePrecedenceExpression(endTokens, OperatorUtil::unary));
+            _tokenIndex = getNextNotComment();
+            left = parsePrecedenceExpression(endTokens, OperatorUtil::unary);
+            left = std::make_shared<UnaryExpression>(nextType, nextJudgeTokenIndex, left);
         } else{
             _tokenIndex = nextJudgeTokenIndex;
             switch (nextType){
                 case TokenType::l_paren: {
-                    // TODO: handle with parenExpressions and type convert expressions
+                    std::size_t lParenIndex = _tokenIndex;
+                    _tokenIndex = getNextNotComment();
+                    if (skipOverATypeDeclaration()) {
+                        _tokenIndex = getNextNotComment();
+                        if (getCurrentTokenType() == token::TokenType::r_paren) {
+                            _tokenIndex = getNextNotComment();
+                            if ((getCurrentTokenType() == token::TokenType::identifier) ||
+                                    (getCurrentTokenType() == token::TokenType::l_paren)) {
+                                // we ensured that in this situation, we met a explicit type convert expression
+
+                                // reset token pos to start parse of skipped type
+                                _tokenIndex = lParenIndex;
+                                _tokenIndex = getNextNotComment();
+                                auto type = parseType();
+                                std::size_t rParenIndex = getNextNotComment();
+                                _tokenIndex = rParenIndex;
+                                _tokenIndex = getNextNotComment();
+                                auto rExpr = parsePrecedenceExpression(endTokens, OperatorUtil::primary);
+                                left = std::make_shared<ExplicitCastExpression>(lParenIndex, rParenIndex, type, rExpr);
+                                break;
+                            }
+                        }
+                    }
+                    _tokenIndex = lParenIndex;
+                    _tokenIndex = getNextNotComment();
+                    auto newEndTokens = endTokens;
+                    newEndTokens.push_back(TokenType::r_paren);
+                    auto inner = parsePrecedenceExpression(newEndTokens);
+                    nextJudgeTokenIndex = getNextNotComment();
+                    nextType = getTokenType(nextJudgeTokenIndex);
+                    if (nextType == token::TokenType::r_paren) {
+                        left = std::make_shared<ParenthesesExpression>(lParenIndex, nextJudgeTokenIndex, inner);
+                        _tokenIndex = nextJudgeTokenIndex;
+                    } else {
+                        left = std::make_shared<ParenthesesExpression>(lParenIndex, SyntaxNode::invalidTokenIndex,
+                                                                       inner);
+                    }
                     break;
                 }
                 case TokenType::identifier: {
@@ -611,17 +582,56 @@ namespace yuuki::compiler::feasy{
                     break;
                 }
                 default:
-                    //TODO: error handling.
+                    left = std::make_unique<NullExpression>();
+
+                    if(OperatorUtil::getBinaryOperatorPrecedence(nextType)==OperatorUtil::initial){
+                        std::size_t startIndex = _tokenIndex;
+                        // we have moved into a position we can handle we should just push the error happened
+                        // since ErrorBuilder::error().ranges() is not implemented yet, just do nothing here
+                        // TODO: push error 'UnexpectedTokens'
+                        // unexpected tokens, move to endTokens;
+                        move(endTokens);
+                    }
                     break;
             }
         }
         while (true){
             nextJudgeTokenIndex = getNextNotComment();
             nextType = getTokenType(nextJudgeTokenIndex);
+            // we met the end of the expression
+            if(std::find(endTokens.begin(),endTokens.end(),nextType)!=endTokens.end())
+                break;
             parsePrimary:
+
             switch (nextType){
-                case token::TokenType::l_square:
+                case token::TokenType::op_plusplus:
+                case token::TokenType::op_minusminus:{
+                    _tokenIndex = nextJudgeTokenIndex;
+                    left = std::make_shared<PostfixExpression>(nextType,_tokenIndex,left);
                     break;
+                }
+                case token::TokenType::l_square: {
+                    _tokenIndex = nextJudgeTokenIndex;
+                    std::size_t lSquare = _tokenIndex;
+                    _tokenIndex = getNextNotComment();
+                    auto newEndTokens = endTokens;
+                    newEndTokens.push_back(TokenType::r_square);
+                    auto index = parsePrecedenceExpression(newEndTokens);
+                    std::size_t rSquare = getNextNotComment();
+                    if(getTokenType(rSquare)==TokenType::r_square){
+                        left = std::make_shared<IndexExpression>(left,index,lSquare,rSquare);
+                        _tokenIndex = rSquare;
+                        nextJudgeTokenIndex = getNextNotComment();
+                        nextType = getTokenType(nextJudgeTokenIndex);
+                        if(nextType == TokenType::l_square)
+                            goto parsePrimary;
+                    } else{
+                        left = std::make_shared<IndexExpression>(left,index,lSquare);
+                        move(endTokens);
+                        // TODO: throw ] expected
+                    }
+                    break;
+                }
                 case token::TokenType::l_paren:
                     break;
                 default:
@@ -646,6 +656,125 @@ namespace yuuki::compiler::feasy{
             left = std::make_shared<BinaryExpression>(left,nextType,nextJudgeTokenIndex,right);
         }
         return left;
+    }
+
+    bool Parser::skipOverATypeDeclaration() {
+        // a valid type should start with a name like
+        //     Generic<G.T.S>
+        //        ^                         valid!
+        // the judge token in this situation should be next non-comment token (marked by '^')
+        //     Generic /*interline comment*/ <G.T.S>
+        //                                   ^
+        // but in some error cases a type could start just like
+        //     Generic<T1, [ ]>
+        //                 ^                identifier expected,   parse as Generic<T1, unknown[]>
+        //     Generic<T1, <SomeArgument>>
+        //                 ^                identifier expected,   parse as Generic<T1, unknown<SomeArgument>>
+        //     Generic<T1,      +>
+        //                 ↑    ^           unexpected identifier,
+        //                 |                identifier expected,   parse as Generic<T1>
+        // the judge token in this situation should be current token (marked by '^')
+        std::size_t nextJudgeTokenIndex = _tokenIndex;
+        if(getCurrentTokenType() == token::TokenType::identifier) {
+            skipOverAName();
+            nextJudgeTokenIndex = getNextNotComment();
+        } else{
+            return false;
+        }
+        switch (getTokenType(nextJudgeTokenIndex)){
+            case token::TokenType::op_less:
+                // move token to the '<' position
+                _tokenIndex = nextJudgeTokenIndex;
+                if (skipOverAGenericArgument()) {
+                    nextJudgeTokenIndex = getNextNotComment();
+                    if (getTokenType(nextJudgeTokenIndex) != token::TokenType::l_square)
+                        return true;
+                }
+                return false;
+            case token::TokenType::l_square:
+                break;
+            default:
+                return true;
+        }
+
+        parseNextArray:
+        _tokenIndex = nextJudgeTokenIndex;
+        nextJudgeTokenIndex = getNextNotComment();
+        if(getTokenType(nextJudgeTokenIndex)!=token::TokenType::r_square){
+            return false;
+        }
+        _tokenIndex = nextJudgeTokenIndex;
+
+        nextJudgeTokenIndex = getNextNotComment();
+        if(getTokenType(nextJudgeTokenIndex) == token::TokenType::l_square){
+            goto parseNextArray;
+        }
+        return true;
+    }
+
+    bool Parser::skipOverAGenericArgument() {
+        auto nextJudgeTokenIndex = getNextNotComment();
+        // for situations like  Generic< >
+        //                              ^    identifier expected
+        parseNextTypeArg:
+        switch (getTokenType(nextJudgeTokenIndex)){
+            case TokenType::op_greatergreater:
+                _tokenIndex = nextJudgeTokenIndex;
+                splitCurrentMultiCharOperator();
+            case TokenType::op_greater:{
+                _tokenIndex = nextJudgeTokenIndex;
+                return true;
+            }
+            case TokenType::eof:{
+                _tokenIndex = nextJudgeTokenIndex;
+                return false;
+            }
+            case TokenType::identifier:
+            case TokenType::op_less:
+            case TokenType::l_square:
+                _tokenIndex = nextJudgeTokenIndex;
+                skipOverATypeDeclaration();
+                switch (getCurrentTokenType()){
+                    case TokenType::identifier:
+                    case TokenType::op_greater:
+                    case TokenType::r_square:
+                        nextJudgeTokenIndex = getNextNotComment();
+                        break;
+                    default:
+                        nextJudgeTokenIndex = _tokenIndex;
+                        break;
+                }
+                if(getTokenType(nextJudgeTokenIndex) == TokenType::comma){
+                    _tokenIndex = nextJudgeTokenIndex;
+                    nextJudgeTokenIndex = getNextNotComment();
+                }
+                goto parseNextTypeArg;
+
+            default:
+                return false;
+        }
+    }
+
+    bool Parser::skipOverAName() {
+        // since call won't move over the identifier, we should move here
+        auto nextJudgeTokenIndex = getNextNotComment();
+        if(getTokenType(getNextNotComment()) == TokenType::op_period){
+            // record the current token index (the index BEFORE period)
+            auto originalTokIndex = _tokenIndex;
+            // _tokenIndex is now set to
+            _tokenIndex = nextJudgeTokenIndex;
+            // move to next non-comment token position
+            nextJudgeTokenIndex = getNextNotComment();
+            if(getTokenType(nextJudgeTokenIndex) == TokenType::identifier) {
+                _tokenIndex = nextJudgeTokenIndex;
+                // continue to parse right part of name
+                return skipOverAName();
+            } else{
+                // since the next usable token is not a identifier, roll back.
+                _tokenIndex = originalTokIndex;
+            }
+        }
+        return true;
     }
 
 }

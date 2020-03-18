@@ -2,6 +2,7 @@
 #define YUUKI_PARSER_H
 
 #include <memory>
+#include <list>
 #include <yuuki/compiler/diagnostics/diagnostic_stream.h>
 #include <yuuki/compiler/feasy/syntax_context.h>
 #include <yuuki/compiler/feasy/syntax/binary_expression.h>
@@ -57,17 +58,19 @@ namespace yuuki::compiler::feasy {
         std::shared_ptr<syntax::Type> parseType();
 
         std::shared_ptr<syntax::Expression> parseExpression();
-        std::shared_ptr<syntax::Expression> parsePrecedenceExpression(std::initializer_list<token::TokenType> endTokens,
+        std::shared_ptr<syntax::Expression> parsePrecedenceExpression(std::list<token::TokenType> endTokens,
                                                                       int parentPrecedence = token::OperatorUtil::initial);
 
+        bool skipOverAName();
         bool skipOverATypeDeclaration();
 
+        bool skipOverAGenericArgument();
         void splitCurrentMultiCharOperator();
 
 
     private:
 
-        inline void move(std::initializer_list<token::TokenType> acceptableEndTokType) {
+        inline void move(std::list<token::TokenType> acceptableEndTokType) {
             token::TokenType lastType;
             do {
                 lastType = _context->tokens[_tokenIndex++]->type;

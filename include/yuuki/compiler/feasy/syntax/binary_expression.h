@@ -18,12 +18,13 @@ namespace yuuki::compiler::feasy::syntax{
         std::size_t end() override;
         bool hasChild() override ;
         void analyseType() override;
+        std::string toString() override;
 
     private:
-        std::shared_ptr<SyntaxNode> _left;
+        std::shared_ptr<Expression> _left;
         token::TokenType _operatorType;
         std::size_t _opIndex;
-        std::shared_ptr<SyntaxNode> _right;
+        std::shared_ptr<Expression> _right;
     };
 }
 #endif //YUUKI_BINARY_EXPRESSION_H

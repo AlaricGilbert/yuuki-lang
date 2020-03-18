@@ -1,7 +1,6 @@
 #ifndef YUUKI_NAME_H
 #define YUUKI_NAME_H
 #include <yuuki/compiler/feasy/syntax/syntax_node.h>
-#include <yuuki/compiler/feasy/syntax/expression.h>
 #include <string>
 
 namespace yuuki::compiler::feasy::syntax{
@@ -48,19 +47,5 @@ namespace yuuki::compiler::feasy::syntax{
         std::size_t _periodTokId;
     };
 
-    class NameExpression: public Expression{
-    public:
-        explicit NameExpression(const std::shared_ptr<Name>& name);
-        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
-        void writeCurrentInfo(std::ostream& ostream) override;
-        SyntaxType getType() override ;
-        std::size_t start() override ;
-        std::size_t end() override ;
-        bool hasChild() override ;
-        void analyseType() override ;
-
-    private:
-        std::shared_ptr<Name> _name;
-    };
 }
 #endif //YUUKI_NAME_H

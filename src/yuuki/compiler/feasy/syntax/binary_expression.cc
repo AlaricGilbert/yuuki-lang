@@ -25,17 +25,7 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     void BinaryExpression::writeCurrentInfo(std::ostream &s) {
-        if(s.rdbuf() == std::cout.rdbuf()){
-            s << rang::fg::gray     << "BinaryExpression "
-              << rang::fg::yellow   << "<" << this << "> "
-              << rang::fg::green
-              << '\'' << token::TokenUtil::getSpell(_operatorType) << '\''
-              << rang::fg::reset << std::endl;
-        } else{
-            s << "BinaryExpression "
-              << "<" << this << "> "
-              << '\'' << token::TokenUtil::getSpell(_operatorType) << '\'' << std::endl;
-        }
+        Expression::writeCurrentInfo(s);
     }
 
     void BinaryExpression::analyseType() {
@@ -55,6 +45,14 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     std::size_t BinaryExpression::end() {
-        return _right->end();
+        if (_right->getType() != SyntaxType::NullExpression)
+            return _right->end();
+        return _opIndex;
+    }
+
+    std::string BinaryExpression::toString() {
+        if (_operatorType == token::TokenType::op_period)
+            return _left->toString() + token::TokenUtil::getSpell(_operatorType) + _right->toString();
+        return _left->toString() + " " + token::TokenUtil::getSpell(_operatorType) + " " + _right->toString();
     }
 }

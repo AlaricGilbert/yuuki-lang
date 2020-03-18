@@ -22,17 +22,7 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     void UnaryExpression::writeCurrentInfo(std::ostream &s) {
-        if(s.rdbuf() == std::cout.rdbuf()){
-            s << rang::fg::gray     << "UnaryExpression "
-              << rang::fg::yellow   << "<" << this << "> "
-              << rang::fg::green
-              << '\'' << token::TokenUtil::getSpell(_operatorType) << '\''
-              << rang::fg::reset <<std::endl;
-        } else{
-            s << "UnaryExpression "
-              << "<" << this << "> "
-              << '\'' << token::TokenUtil::getSpell(_operatorType) << '\'' << std::endl;
-        }
+        Expression::writeCurrentInfo(s);
     }
 
     void UnaryExpression::analyseType() {
@@ -52,6 +42,12 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     std::size_t UnaryExpression::end() {
-        return _right->end();
+        if (_right->getType() != SyntaxType::NullExpression)
+            return _right->end();
+        return _opIndex;
+    }
+
+    std::string UnaryExpression::toString() {
+        return token::TokenUtil::getSpell(_operatorType) + _right->toString();
     }
 }

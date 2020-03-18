@@ -34,18 +34,23 @@ namespace yuuki::compiler::feasy::syntax{
         UnknownType,
 
         BinaryExpression,
+        ExplicitCastExpression,
         UnaryExpression,
         NameExpression,
+        NullExpression,
         ThisExpression,
         StringLiteralExpression,
         NumericLiteralExpression,
         CallExpression,
         IndexExpression,
+        ParenthesesExpression,
+        PostfixExpression,
 
 
         InlineComment,
         InterlineComment,
     };
+    std::ostream & operator<<(std::ostream& s,SyntaxType type);
     template <class _TListElem>
     class ISyntaxContext;
     class SyntaxNode{

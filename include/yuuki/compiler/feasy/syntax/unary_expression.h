@@ -15,6 +15,7 @@ namespace yuuki::compiler::feasy::syntax{
         std::size_t end() override;
         bool hasChild() override;
         void analyseType() override;
+        std::string toString() override;
     private:
         token::TokenType _operatorType;
         std::size_t _opIndex;
