@@ -38,7 +38,7 @@ namespace yuuki::compiler::feasy::syntax{
             syntaxWalker(_inheritInfos, false);
         if(_genericInfos->hasChild())
             syntaxWalker(_genericInfos, _members.empty());
-        for (int i = 0; i < _members.size(); ++i) {
+        for (std::size_t i = 0; i < _members.size(); ++i) {
             syntaxWalker(_members[i], i == _members.size() - 1);
         }
     }

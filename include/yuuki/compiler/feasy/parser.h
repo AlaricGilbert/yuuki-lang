@@ -59,7 +59,7 @@ namespace yuuki::compiler::feasy {
 
         std::shared_ptr<syntax::Expression> parseExpression();
         std::shared_ptr<syntax::Expression> parsePrecedenceExpression(std::list<token::TokenType> endTokens,
-                                                                      int parentPrecedence = token::OperatorUtil::initial);
+                                                                      std::size_t parentPrecedence = token::OperatorUtil::initial);
 
         bool skipOverAName();
         bool skipOverATypeDeclaration();

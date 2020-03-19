@@ -237,8 +237,9 @@ namespace yuuki.test.foo {
     for (int i = 0; i < 57; ++i) {
         auto type = context->tokens[i]->type;
         EXPECT_EQ(type,type_lists[i]);
-        if (i == 50)
+        if (i == 50) {
             EXPECT_TRUE(true);
+        }
         if (type == TokenType::inline_comment || type == TokenType::interline_comment ||
             type == TokenType::numeric_const || type == TokenType::string_const ||type == TokenType::identifier) {
             EXPECT_EQ(literal_vars[j++], (std::string)context->tokens[i]->rawCode);

@@ -516,7 +516,7 @@ namespace yuuki::compiler::feasy{
     }
 
     std::shared_ptr<syntax::Expression> Parser::parsePrecedenceExpression(std::list<token::TokenType> endTokens,
-                                                                          int parentPrecedence) {
+                                                                          std::size_t parentPrecedence) {
         std::size_t nextJudgeTokenIndex = getFirstNotComment();
         TokenType nextType = getTokenType(nextJudgeTokenIndex);
         std::shared_ptr<Expression> left;

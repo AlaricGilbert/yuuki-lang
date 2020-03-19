@@ -112,7 +112,7 @@ namespace yuuki::compiler::diagnostics{
         // the right end position
         size_t tildeNums = std::min(contextPtr->lines[pos.line - 1].length() - pos.offset,
                                     tokenLength);
-        for (int i = 1; i < tildeNums; ++i) {
+        for (std::size_t i = 1; i < tildeNums; ++i) {
             stream << "~";
         }
         // reset color if it's write to std::cout

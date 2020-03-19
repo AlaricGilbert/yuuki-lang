@@ -11,7 +11,7 @@ namespace yuuki::compiler::diagnostics{
     }
 
     std::ostream &operator<<(std::ostream& ostream,const DiagnosticStream& diagnosticStream){
-        for (int i = 0; i < diagnosticStream._diagnostics.size(); ++i) {
+        for (std::size_t i = 0; i < diagnosticStream._diagnostics.size(); ++i) {
             diagnosticStream._diagnostics[i]->writeTo(ostream,diagnosticStream._contextManager);
         }
         return ostream;
