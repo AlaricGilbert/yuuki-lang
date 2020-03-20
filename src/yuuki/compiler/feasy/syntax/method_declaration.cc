@@ -7,7 +7,7 @@ namespace yuuki::compiler::feasy::syntax {
     MethodDeclaration::MethodDeclaration(const std::shared_ptr<ModifierList>& mod,
                                          const std::shared_ptr<Type>& returnType,
                                          const std::shared_ptr<Name>& name,
-                                         const std::shared_ptr<GenericDeclaration>& genericInfos,
+                                         const std::shared_ptr<GenericTypeList>& genericInfos,
                                          const std::shared_ptr<ParamList>& params,
                                          const std::shared_ptr<BlockStatement>& body) {
         _mod = mod;

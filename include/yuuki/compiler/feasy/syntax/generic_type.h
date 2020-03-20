@@ -6,7 +6,9 @@
 namespace yuuki::compiler::feasy::syntax{
     class GenericType:public Type{
     public:
-        GenericType(const std::shared_ptr<Type>& mainType,const std::shared_ptr<GenericArgumentList> &genericInfo);
+        GenericType(const std::shared_ptr<Type>& mainType,const std::shared_ptr<GenericTypeList> &genericList);
+        explicit GenericType(const std::shared_ptr<Type>& mainType);
+        std::shared_ptr<GenericTypeList> getGenericList();
         void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>,bool)>& syntaxWalker) override;
         void writeCurrentInfo(std::ostream& ostream) override;
         SyntaxType getType() override ;
@@ -17,7 +19,7 @@ namespace yuuki::compiler::feasy::syntax{
 
     private:
         std::shared_ptr<Type> _mainType;
-        std::shared_ptr<GenericArgumentList> _genericInfo;
+        std::shared_ptr<GenericTypeList> _genericList;
 
     };
 }

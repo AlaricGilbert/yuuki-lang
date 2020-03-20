@@ -45,26 +45,22 @@ namespace yuuki::compiler::feasy {
 
         std::shared_ptr<syntax::IdentifierName> parseIdentifier();
 
-        std::shared_ptr<syntax::ModifierList> parseModifiers();
+        std::shared_ptr<syntax::ClassDeclaration> parseClass();
 
-        std::shared_ptr<syntax::ClassDeclaration> parseClass(const std::shared_ptr<syntax::ModifierList>& modifiers);
+        std::shared_ptr<syntax::MethodDeclaration> parseMethodDeclaration();
 
-        std::shared_ptr<syntax::MethodDeclaration> parseMethodDeclaration(const std::shared_ptr<syntax::ModifierList>& modifiers);
+        std::shared_ptr<syntax::Type> parseType(std::list<token::TokenType> errorRecover = {});
 
-        std::shared_ptr<syntax::GenericDeclaration> parseGenericDeclaration();
+        std::shared_ptr<syntax::Expression> parseExpression(std::list<token::TokenType> endTokens = {},
+                                                            std::size_t parentPrecedence = token::OperatorUtil::initial);
 
-        std::shared_ptr<syntax::GenericArgumentList> parseGenericArgument();
-
-        std::shared_ptr<syntax::Type> parseType();
-
-        std::shared_ptr<syntax::Expression> parseExpression();
-        std::shared_ptr<syntax::Expression> parsePrecedenceExpression(std::list<token::TokenType> endTokens,
-                                                                      std::size_t parentPrecedence = token::OperatorUtil::initial);
-
+        bool fillParamList(const std::shared_ptr<syntax::ParamList>& list);
+        bool fillGenericTypeList(const std::shared_ptr<syntax::GenericTypeList> &list);
+        bool fillModifierList(const std::shared_ptr<syntax::ModifierList>& list);
         bool skipOverAName();
         bool skipOverATypeDeclaration();
-
         bool skipOverAGenericArgument();
+        bool skipOverAModifierList();
         void splitCurrentMultiCharOperator();
 
 

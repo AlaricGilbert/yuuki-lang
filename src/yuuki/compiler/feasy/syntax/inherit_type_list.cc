@@ -1,15 +1,15 @@
-#include <yuuki/compiler/feasy/syntax/inherit_declaration.h>
+#include <yuuki/compiler/feasy/syntax/inherit_type_list.h>
 #include <rang/rang.h>
 
 namespace yuuki::compiler::feasy::syntax{
 
-    void InheritDeclaration::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+    void InheritTypeList::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
         for(size_t id = 0; id < _inheritInfos.size();id++){
             syntaxWalker(_inheritInfos[id], id == _inheritInfos.size() - 1);
         }
     }
 
-    void InheritDeclaration::writeCurrentInfo(std::ostream &s) {
+    void InheritTypeList::writeCurrentInfo(std::ostream &s) {
         if(s.rdbuf() == std::cout.rdbuf()){
             s << rang::fg::gray     << "InheritDeclaration "
               << rang::fg::yellow   << "<" << this << "> " << std::endl;
@@ -19,25 +19,25 @@ namespace yuuki::compiler::feasy::syntax{
         }
     }
 
-    void InheritDeclaration::add(const std::shared_ptr<Type> &type) {
+    void InheritTypeList::add(const std::shared_ptr<Type> &type) {
         _inheritInfos.push_back(type);
     }
 
-    SyntaxType InheritDeclaration::getType() {
+    SyntaxType InheritTypeList::getType() {
         return SyntaxType::InheritDeclaration;
     }
 
-    bool InheritDeclaration::hasChild() {
+    bool InheritTypeList::hasChild() {
         return !_inheritInfos.empty();
     }
 
-    std::size_t InheritDeclaration::start() {
+    std::size_t InheritTypeList::start() {
         if(_inheritInfos.empty())
             return invalidTokenIndex;
         return _inheritInfos.front()->start();
     }
 
-    std::size_t InheritDeclaration::end() {
+    std::size_t InheritTypeList::end() {
         if(_inheritInfos.empty())
             return invalidTokenIndex;
         return _inheritInfos.back()->end();

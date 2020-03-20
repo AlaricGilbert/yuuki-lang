@@ -3,14 +3,23 @@
 
 namespace yuuki::compiler::feasy::syntax{
 
-    GenericType::GenericType(const std::shared_ptr<Type> &typeName,const std::shared_ptr<GenericArgumentList> &genericInfo) {
+    GenericType::GenericType(const std::shared_ptr<Type> &typeName,const std::shared_ptr<GenericTypeList> &genericInfo) {
         _mainType = typeName;
-        _genericInfo = genericInfo;
+        _genericList = genericInfo;
+    }
+
+    GenericType::GenericType(const std::shared_ptr<Type> &typeName){
+        _mainType = typeName;
+        _genericList = std::make_shared<GenericTypeList>();
+    }
+
+    std::shared_ptr<GenericTypeList> GenericType::getGenericList(){
+        return _genericList;
     }
 
     void GenericType::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
         syntaxWalker(_mainType, false);
-        syntaxWalker(_genericInfo, true);
+        syntaxWalker(_genericList, true);
     }
 
     void GenericType::writeCurrentInfo(std::ostream &s) {
@@ -27,7 +36,7 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     std::string GenericType::toString() {
-        return _mainType->toString() + _genericInfo->toString();
+        return _mainType->toString() + _genericList->toString();
     }
 
     SyntaxType GenericType::getType() {

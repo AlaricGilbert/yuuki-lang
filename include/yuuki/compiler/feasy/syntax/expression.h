@@ -201,7 +201,7 @@ namespace yuuki::compiler::feasy::syntax{
     class GenericCallExpression: public Expression, public ISyntaxList<Expression> {
     public:
         explicit GenericCallExpression(std::size_t lParenIndex, const std::shared_ptr<Expression> &method,
-                const std::shared_ptr<GenericArgumentList>& genericArgList,
+                const std::shared_ptr<GenericTypeList>& genericArgList,
                 std::size_t rParenIndex = invalidTokenIndex);
         void setRParenIndex(std::size_t rParenIndex);
         void add(const std::shared_ptr<Expression> &child) override;
@@ -216,7 +216,7 @@ namespace yuuki::compiler::feasy::syntax{
 
     private:
         std::shared_ptr<Expression> _method;
-        std::shared_ptr<GenericArgumentList> _genericArgList;
+        std::shared_ptr<GenericTypeList> _genericArgList;
         std::vector<std::shared_ptr<Expression>> _arguments;
         std::size_t _lParenIndex;
         std::size_t _rParenIndex;

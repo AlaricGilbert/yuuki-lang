@@ -441,7 +441,7 @@ namespace yuuki::compiler::feasy::syntax {
     }
 
     GenericCallExpression::GenericCallExpression(std::size_t lParenIndex, const std::shared_ptr<Expression> &method,
-                                                 const std::shared_ptr<GenericArgumentList> &genericArgList,
+                                                 const std::shared_ptr<GenericTypeList> &genericArgList,
                                                  std::size_t rParenIndex) {
         _lParenIndex = lParenIndex;
         _method = method;

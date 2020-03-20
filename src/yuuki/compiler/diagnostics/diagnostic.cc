@@ -203,7 +203,7 @@ namespace yuuki::compiler::diagnostics{
                    << contextPtr->lines[pos.line - 1] << std::endl;
         }
 
-        for (size_t sIdx = 0; sIdx < pos.offset - 1; sIdx++) {
+        for (size_t sIdx = 0; sIdx + 1 < pos.offset; sIdx++) {
             stream << " ";
         }
         stream << "^";

@@ -10,5 +10,7 @@ namespace yuuki::compiler::feasy::syntax{
         bool hasChild() override = 0;
 
     };
+
+
 }
 #endif //YUUKI_STATEMENT_H

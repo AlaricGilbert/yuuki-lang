@@ -12,7 +12,7 @@ namespace yuuki::compiler::feasy::syntax {
         MethodDeclaration(const std::shared_ptr<ModifierList>& mod,
                           const std::shared_ptr<Type>& returnType,
                           const std::shared_ptr<Name>& name,
-                          const std::shared_ptr<GenericDeclaration>& genericInfos,
+                          const std::shared_ptr<GenericTypeList>& genericInfos,
                           const std::shared_ptr<ParamList>& params,
                           const std::shared_ptr<BlockStatement>& body);
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
@@ -23,7 +23,7 @@ namespace yuuki::compiler::feasy::syntax {
         std::shared_ptr<ModifierList> _mod;
         std::shared_ptr<Type> _returnType;
         std::shared_ptr<Name> _name;
-        std::shared_ptr<GenericDeclaration> _genericInfos;
+        std::shared_ptr<GenericTypeList> _genericInfos;
         std::shared_ptr<ParamList> _params;
         std::shared_ptr<BlockStatement> _body;
     };

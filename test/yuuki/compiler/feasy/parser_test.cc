@@ -29,8 +29,8 @@ TEST(Parser,parseName){
     std::cout << *tree2;
 }
 
-TEST(Parser,parseGenericInfo){
-    auto codes = {"<T0,T1,T2>","<T0,T1, >","<T0,T1 T2>","< >","< , >"};
+TEST(Parser,fillGenericParamList){
+    auto codes = {"<T0,T1,T2>","<T0,T1, >","<T0,T1 T2>","< >","< , >", "<", "<T0"};
     auto sm = std::make_shared<SyntaxContextManager>();
     auto d = std::make_shared<DiagnosticStream>(sm);
     for(auto& code:codes) {
@@ -39,7 +39,8 @@ TEST(Parser,parseGenericInfo){
         Lexer l = Lexer(context, d);
         Parser p = Parser(context, d);
         l.lex();
-        auto gen = p.parseGenericDeclaration();
+        auto list = std::make_shared<GenericTypeList>();
+        p.fillGenericTypeList(list);
     }
     std::cout << *d;
 }
@@ -72,15 +73,15 @@ TEST(Parser,parseType){
 }
 
 TEST(Parser,parseClassDecl){
-    auto code = "public naive class list<T>:i_enumerable<T>,i_gc_ignored;";
+    
+    auto code = "public naive class list<T>:i_enumerable<T>,i_gc_ignored";
     auto sm = std::make_shared<SyntaxContextManager>();
     auto d = std::make_shared<DiagnosticStream>(sm);
     auto context = sm->create(code);
     Lexer l = Lexer(context,d);
     Parser p = Parser(context,d);
     l.lex();
-    auto mod = p.parseModifiers();
-    auto t = p.parseClass(mod);
+    auto t = p.parseClass();
     std::cout << *t;
     std::cout << *d;
 }
@@ -93,7 +94,7 @@ TEST(Parser,parsePrecedenceExpr){
     Lexer l = Lexer(context,d);
     Parser p = Parser(context,d);
     l.lex();
-    auto t = p.parsePrecedenceExpression({});
+    auto t = p.parseExpression({});
     std::cout << *t;
     std::cout << *d;
 }
