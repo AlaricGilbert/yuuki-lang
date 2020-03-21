@@ -2,7 +2,7 @@
 #define YUUKI_METHOD_DECLARATION_H
 
 #include <yuuki/compiler/feasy/syntax/syntax_node.h>
-#include <yuuki/compiler/feasy/syntax/block_statement.h>
+#include <yuuki/compiler/feasy/syntax/statement.h>
 #include <yuuki/compiler/feasy/syntax/modifier_list.h>
 #include <yuuki/compiler/feasy/syntax/generic.h>
 #include <yuuki/compiler/feasy/syntax/param_list.h>

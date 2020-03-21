@@ -436,4 +436,273 @@ namespace yuuki::compiler::feasy::syntax{
     std::size_t LabelStatement::end() {
         return _colonTokenIndex;
     }
+
+    void BlockStatement::add(const std::shared_ptr<Statement> &child) {
+        _children.push_back(child);
+    }
+
+    void BlockStatement::add(const std::shared_ptr<Expression> &child) {
+        _children.push_back(child);
+    }
+    void BlockStatement::writeCurrentInfo(std::ostream &s) {
+        if(s.rdbuf() == std::cout.rdbuf()){
+            s << rang::fg::magenta  << "BlockStatement "
+              << rang::fg::yellow   << "<" << this << "> "
+              << rang::fg::reset    << std::endl;
+        } else{
+            s << "BlockStatement "
+              << "<" << this << "> " << std::endl;
+        }
+    }
+
+    void BlockStatement::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+        for(size_t id = 0; id < _children.size();id++){
+            syntaxWalker(_children[id], id == _children.size() - 1);
+        }
+    }
+
+    SyntaxType BlockStatement::getType() {
+        return SyntaxType::BlockStatement;
+    }
+
+    bool BlockStatement::hasChild() {
+        return !_children.empty();
+    }
+
+    std::size_t BlockStatement::start() {
+        return _lBraceTokenIndex;
+    }
+
+    std::size_t BlockStatement::end() {
+        if(_rBraceTokenIndex!=invalidTokenIndex)
+            return _rBraceTokenIndex;
+        if(_children.empty())
+            return _lBraceTokenIndex;
+        return _children.back()->end();
+    }
+
+    BlockStatement::BlockStatement(std::size_t lBraceTokenIndex) {
+        _lBraceTokenIndex = lBraceTokenIndex;
+        _rBraceTokenIndex = invalidTokenIndex;
+    }
+
+    void BlockStatement::setRBraceTokenIndex(std::size_t rBraceTokenIndex) {
+        _rBraceTokenIndex = rBraceTokenIndex;
+    }
+
+    SwitchStatement::SwitchStatement(std::size_t switchTokenIndex,
+                                     const std::shared_ptr<Expression>& value,
+                                     const std::shared_ptr<SwitchElementList>& caseList){
+        _switchTokenIndex = switchTokenIndex;
+        _value = value;
+        _caseList = caseList;
+    }
+
+    void SwitchStatement::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+        if(_caseList!= nullptr){
+            if(_value!= nullptr) {
+                syntaxWalker(_value, false);
+            }
+            syntaxWalker(_caseList, true);
+        } else{
+            if(_value!= nullptr) {
+                syntaxWalker(_value, true);
+            }
+        }
+    }
+
+    void SwitchStatement::writeCurrentInfo(std::ostream &s) {
+        if(s.rdbuf() == std::cout.rdbuf()){
+            s << rang::fg::magenta  << "SwitchStatement "
+              << rang::fg::yellow   << "<" << this << "> "
+              << rang::fg::blue     << "switch "
+              << rang::fg::green    << _value->toString()
+              << rang::fg::reset    << std::endl;
+        } else{
+            s << "SwitchStatement "
+              << "<" << this << "> "
+              << "switch "
+              << _value->toString()
+              << std::endl;
+        }
+    }
+
+    SyntaxType SwitchStatement::getType() {
+        return SyntaxType::SwitchStatement;
+    }
+
+    bool SwitchStatement::hasChild() {
+        return (_value != nullptr)||(_caseList != nullptr);
+    }
+
+    std::size_t SwitchStatement::start() {
+        return _switchTokenIndex;
+    }
+
+    std::size_t SwitchStatement::end() {
+        if(_caseList!= nullptr)
+            return _caseList->end();
+        if(_value!= nullptr)
+            return _value->end();
+        return _switchTokenIndex;
+    }
+
+    CaseStatement::CaseStatement(std::size_t caseTokenIndex,std::size_t colonTokenIndex,
+                                 const std::shared_ptr<Expression>& value,
+                                 const std::shared_ptr<BlockStatement>& caseBlock) {
+        _caseTokenIndex = caseTokenIndex;
+        _caseBlock = caseBlock;
+        _value = value;
+        _colonTokenIndex = colonTokenIndex;
+    }
+
+    void CaseStatement::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+        if(_caseBlock!= nullptr){
+            if(_value!= nullptr) {
+                syntaxWalker(_value, false);
+            }
+            syntaxWalker(_caseBlock, true);
+        } else{
+            if(_value!= nullptr) {
+                syntaxWalker(_value, true);
+            }
+        }
+    }
+
+    void CaseStatement::writeCurrentInfo(std::ostream &s) {
+        if(s.rdbuf() == std::cout.rdbuf()){
+            s << rang::fg::magenta  << "CaseStatement "
+              << rang::fg::yellow   << "<" << this << "> "
+              << rang::fg::blue     << "case :"
+              << rang::fg::green    << _value->toString()
+              << rang::fg::reset    << std::endl;
+        } else{
+            s << "CaseStatement "
+              << "<" << this << "> "
+              << "case :"    << _value->toString()
+              << std::endl;
+        }
+    }
+
+    SyntaxType CaseStatement::getType() {
+        return SyntaxType::CaseStatement;
+    }
+
+    bool CaseStatement::hasChild() {
+        return (_value!= nullptr)||(_caseBlock!= nullptr);
+    }
+
+    std::size_t CaseStatement::start() {
+        return _caseTokenIndex;
+    }
+
+    std::size_t CaseStatement::end() {
+        if(_caseBlock!= nullptr)
+            return _caseBlock->end();
+        if(_colonTokenIndex!=invalidTokenIndex)
+            return _colonTokenIndex;
+        if(_value!= nullptr)
+            return _value->end();
+        return _caseTokenIndex;
+    }
+
+    DefaultStatement::DefaultStatement(std::size_t defaultTokenIndex,
+                                                std::size_t colonTokenIndex,
+                                                const std::shared_ptr<BlockStatement>& defaultBlock){
+        _defaultTokenIndex = defaultTokenIndex;
+        _colonTokenIndex = colonTokenIndex;
+        _defaultBlock = defaultBlock;
+    }
+
+    void DefaultStatement::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+        if(_defaultBlock!= nullptr)
+            syntaxWalker(_defaultBlock, true);
+    }
+
+    void DefaultStatement::writeCurrentInfo(std::ostream &s) {
+        if(s.rdbuf() == std::cout.rdbuf()){
+            s << rang::fg::magenta  << "DefaultStatement "
+              << rang::fg::yellow   << "<" << this << "> "
+              << rang::fg::reset    << std::endl;
+        } else{
+            s << "DefaultStatement "
+              << "<" << this << "> "
+              << std::endl;
+        }
+    }
+
+    SyntaxType DefaultStatement::getType() {
+        return SyntaxType::DefaultStatement;
+    }
+
+    bool DefaultStatement::hasChild() {
+        return _defaultBlock!= nullptr;
+    }
+
+    std::size_t DefaultStatement::start() {
+        return _defaultTokenIndex;
+    }
+
+    std::size_t DefaultStatement::end() {
+        if(_defaultBlock!= nullptr)
+            return _defaultBlock->end();
+        if(_colonTokenIndex!= invalidTokenIndex)
+            return _colonTokenIndex;
+        return _defaultTokenIndex;
+    }
+
+    SwitchElementList::SwitchElementList(std::size_t lBraceTokenIndex) {
+        _lBraceTokenIndex = lBraceTokenIndex;
+        _rBraceTokenIndex = invalidTokenIndex;
+    }
+
+    void SwitchElementList::setRBraceTokenIndex(std::size_t rBraceTokenIndex) {
+        _rBraceTokenIndex = rBraceTokenIndex;
+    }
+
+    void SwitchElementList::add(const std::shared_ptr<CaseStatement> &child) {
+        _cases.push_back(child);
+    }
+
+    void SwitchElementList::add(const std::shared_ptr<DefaultStatement> &child) {
+        _cases.push_back(child);
+    }
+
+    void SwitchElementList::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+        for(std::size_t i = 0; i < _cases.size(); i++){
+            syntaxWalker(_cases[i], i == _cases.size() - 1);
+        }
+    }
+
+    void SwitchElementList::writeCurrentInfo(std::ostream &s) {
+        if(s.rdbuf() == std::cout.rdbuf()){
+            s << rang::fg::magenta  << "SwitchElementList "
+              << rang::fg::yellow   << "<" << this << "> "
+              << rang::fg::reset    << std::endl;
+        } else{
+            s << "SwitchElementList "
+              << "<" << this << "> "
+              << std::endl;
+        }
+    }
+
+    SyntaxType SwitchElementList::getType() {
+        return SyntaxType::SwitchElementList;
+    }
+
+    bool SwitchElementList::hasChild() {
+        return !_cases.empty();
+    }
+
+    std::size_t SwitchElementList::start() {
+        return _lBraceTokenIndex;
+    }
+
+    std::size_t SwitchElementList::end() {
+        if(_rBraceTokenIndex != invalidTokenIndex)
+            return _rBraceTokenIndex;
+        if(_cases.empty())
+            return _lBraceTokenIndex;
+        return _cases.back()->end();
+    }
 }

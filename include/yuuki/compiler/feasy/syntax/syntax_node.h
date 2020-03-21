@@ -14,6 +14,7 @@ namespace yuuki::compiler::feasy::syntax{
         ModifierList,
 
         VariableDeclarationList,
+        SwitchElementList,
 
         BlockStatement,
         IfStatement,

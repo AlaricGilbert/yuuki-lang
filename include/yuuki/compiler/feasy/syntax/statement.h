@@ -2,6 +2,8 @@
 #define YUUKI_STATEMENT_H
 #include <yuuki/compiler/feasy/syntax/syntax_node.h>
 #include <yuuki/compiler/feasy/syntax/expression.h>
+#include "variable_declaration_list.h"
+
 namespace yuuki::compiler::feasy::syntax{
 
 
@@ -183,6 +185,100 @@ namespace yuuki::compiler::feasy::syntax{
         std::shared_ptr<Name> _labelName;
         std::size_t _colonTokenIndex;
     };
+
+    class BlockStatement: public ISyntaxList<Statement>,public ISyntaxList<Expression>, public Statement{
+    public:
+        explicit BlockStatement(std::size_t lBraceTokenIndex);
+        void setRBraceTokenIndex(std::size_t lRraceTokenIndex);
+        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void writeCurrentInfo(std::ostream& ostream) override;
+        SyntaxType getType() override ;
+        bool hasChild() override ;
+        std::size_t start() override ;
+        std::size_t end() override ;
+        void add(const std::shared_ptr<Statement>& child) override ;
+        void add(const std::shared_ptr<Expression>& child) override ;
+
+    private:
+        std::vector<std::shared_ptr<SyntaxNode>> _children;
+        std::size_t _lBraceTokenIndex;
+        std::size_t _rBraceTokenIndex;
+    };
+
+    class CaseStatement:public Statement{
+    public:
+        explicit CaseStatement(std::size_t caseTokenIndex,
+                std::size_t colonTokenIndex = invalidTokenIndex,
+                const std::shared_ptr<Expression>& value = nullptr,
+                const std::shared_ptr<BlockStatement>& caseBlock = nullptr);
+        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void writeCurrentInfo(std::ostream& ostream) override;
+        SyntaxType getType() override ;
+        bool hasChild() override ;
+        std::size_t start() override ;
+        std::size_t end() override ;
+
+    private:
+        std::size_t _caseTokenIndex;
+        std::size_t _colonTokenIndex;
+        std::shared_ptr<BlockStatement> _caseBlock;
+        std::shared_ptr<Expression> _value;
+    };
+
+    class DefaultStatement:public Statement{
+    public:
+        explicit DefaultStatement(std::size_t defaultTokenIndex,
+                                  std::size_t colonTokenIndex = invalidTokenIndex,
+                                  const std::shared_ptr<BlockStatement>& defaultBlock = nullptr);
+        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void writeCurrentInfo(std::ostream& ostream) override;
+        SyntaxType getType() override ;
+        bool hasChild() override ;
+        std::size_t start() override ;
+        std::size_t end() override ;
+
+    private:
+        std::size_t _defaultTokenIndex;
+        std::size_t _colonTokenIndex;
+        std::shared_ptr<BlockStatement> _defaultBlock;
+    };
+
+    class SwitchElementList:public Statement, public ISyntaxList<CaseStatement>, public ISyntaxList<DefaultStatement>{
+    public:
+        explicit SwitchElementList(std::size_t lBraceTokenIndex);
+        void setRBraceTokenIndex(std::size_t rBraceTokenIndex);
+        void add(const std::shared_ptr<CaseStatement> &child) override;
+        void add(const std::shared_ptr<DefaultStatement> &child) override;
+        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void writeCurrentInfo(std::ostream& ostream) override;
+        SyntaxType getType() override ;
+        bool hasChild() override ;
+        std::size_t start() override ;
+        std::size_t end() override ;
+
+    private:
+        std::size_t _lBraceTokenIndex;
+        std::size_t _rBraceTokenIndex;
+        std::vector<std::shared_ptr<Statement>> _cases;
+    };
+
+    class SwitchStatement:public Statement{
+    public:
+        SwitchStatement(std::size_t switchTokenIndex,
+                        const std::shared_ptr<Expression>& value = nullptr,
+                        const std::shared_ptr<SwitchElementList>& caseList = nullptr);
+        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void writeCurrentInfo(std::ostream& ostream) override;
+        SyntaxType getType() override ;
+        bool hasChild() override ;
+        std::size_t start() override ;
+        std::size_t end() override ;
+    private:
+        std::size_t _switchTokenIndex;
+        std::shared_ptr<Expression> _value;
+        std::shared_ptr<SwitchElementList> _caseList;
+    };
+
 
 }
 #endif //YUUKI_STATEMENT_H
