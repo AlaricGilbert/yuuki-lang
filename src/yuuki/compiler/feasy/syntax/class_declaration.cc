@@ -115,32 +115,4 @@ namespace yuuki::compiler::feasy::syntax{
         _rBraceIndex = rBraceIndex;
     }
 
-    void FieldDeclaration::add(const std::shared_ptr<Expression> &declExpr) {
-        _fieldDeclExprs.push_back(declExpr);
-    }
-
-    void FieldDeclaration::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
-        for(std::size_t i = 0; i < _fieldDeclExprs.size();i++){
-            syntaxWalker(_fieldDeclExprs[i],i==_fieldDeclExprs.size() - 1);
-        }
-    }
-
-    void FieldDeclaration::writeCurrentInfo(std::ostream &s) {
-        if(s.rdbuf() == std::cout.rdbuf()){
-            s << rang::fg::gray     << "FieldDeclaration "
-              << rang::fg::yellow   << "<" << this << "> "
-              << rang::fg::reset    << std::endl;
-        } else{
-            s << "FieldDeclaration "
-              << "<" << this << "> " << std::endl;
-        }
-    }
-
-    bool FieldDeclaration::hasChild() {
-        return !_fieldDeclExprs.empty();
-    }
-
-    SyntaxType FieldDeclaration::getType() {
-        return SyntaxType::FieldDeclaration;
-    }
 }

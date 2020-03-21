@@ -98,3 +98,46 @@ TEST(Parser,parsePrecedenceExpr){
     std::cout << *t;
     std::cout << *d;
 }
+
+TEST(Parser,parseField){
+    auto codes = {
+            "public vec2<Matrix<int>> a = 1,b =-2;",
+            "public content<m> c = t,",
+            "public content<r> m t"
+    };
+    auto sm = std::make_shared<SyntaxContextManager>();
+    auto d = std::make_shared<DiagnosticStream>(sm);
+    for(auto& code:codes) {
+        auto context = sm->create(code);
+        context->codePath = "INTERNAL_TEST/parseFieldTest.yuk";
+        Lexer l = Lexer(context, d);
+        Parser p = Parser(context, d);
+        l.lex();
+        std::cout << *p.parseFieldDeclaration();
+    }
+    std::cout << *d;
+}
+
+TEST(Parser,parseStatement){
+    auto codes = {
+            "if(a+b==c)while(true);else;",
+            "break;",
+            "return 1 + 2;",
+            "return;",
+            "while(p)break;",
+            "continue;",
+            "goto a;",
+            "label_:"
+    };
+    auto sm = std::make_shared<SyntaxContextManager>();
+    auto d = std::make_shared<DiagnosticStream>(sm);
+    for(auto& code:codes) {
+        auto context = sm->create(code);
+        context->codePath = "INTERNAL_TEST/parseStatementTest.yuk";
+        Lexer l = Lexer(context, d);
+        Parser p = Parser(context, d);
+        l.lex();
+        std::cout << *p.parseStatement();
+    }
+    std::cout << *d;
+}

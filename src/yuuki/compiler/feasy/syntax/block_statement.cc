@@ -12,7 +12,7 @@ namespace yuuki::compiler::feasy::syntax{
     }
     void BlockStatement::writeCurrentInfo(std::ostream &s) {
         if(s.rdbuf() == std::cout.rdbuf()){
-            s << rang::fg::gray     << "BlockStatement "
+            s << rang::fg::magenta  << "BlockStatement "
               << rang::fg::yellow   << "<" << this << "> "
               << rang::fg::reset    << std::endl;
         } else{

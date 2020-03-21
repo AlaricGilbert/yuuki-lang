@@ -13,7 +13,23 @@ namespace yuuki::compiler::feasy::syntax{
         ModifierMark,
         ModifierList,
 
+        VariableDeclarationList,
+
         BlockStatement,
+        IfStatement,
+        ForStatement,
+        WhileStatement,
+        DoWhileStatement,
+        NopStatement,
+        TryCatchStatement,
+        SwitchStatement,
+        CaseStatement,
+        DefaultStatement,
+        BreakStatement,
+        ContinueStatement,
+        ReturnStatement,
+        GotoStatement,
+        LabelStatement,
 
         NamespaceDeclaration,
         ClassDeclaration,
@@ -49,7 +65,7 @@ namespace yuuki::compiler::feasy::syntax{
 
 
         InlineComment,
-        InterlineComment,
+        InterlineComment
     };
     std::ostream & operator<<(std::ostream& s,SyntaxType type);
     template <class _TListElem>

@@ -10,6 +10,8 @@ namespace yuuki::compiler::feasy::syntax{
         void writeCurrentInfo(std::ostream& ostream) override;
         SyntaxType getType() override ;
         bool hasChild() override ;
+        std::size_t start() override ;
+        std::size_t end() override ;
         void add(const std::shared_ptr<Statement>& child) override ;
         void add(const std::shared_ptr<Expression>& child) override ;
 

@@ -10,6 +10,7 @@
 #include <yuuki/compiler/feasy/syntax/namespace_declaration.h>
 #include <yuuki/compiler/feasy/syntax/unary_expression.h>
 #include <yuuki/compiler/feasy/token/operator_util.h>
+#include <yuuki/compiler/feasy/syntax/field_declaration.h>
 /**
  * Parser [WIP]
  *   To accelerate the development speed and make functions flavour unify, temporarily add a basic rule as a notification:
@@ -49,11 +50,33 @@ namespace yuuki::compiler::feasy {
 
         std::shared_ptr<syntax::MethodDeclaration> parseMethodDeclaration();
 
-        std::shared_ptr<syntax::Type> parseType(std::list<token::TokenType> errorRecover = {});
+        std::shared_ptr<syntax::Type> parseType(const std::list<token::TokenType>& errorRecover = {});
 
-        std::shared_ptr<syntax::Expression> parseExpression(std::list<token::TokenType> endTokens = {},
+        std::shared_ptr<syntax::Expression> parseExpression(const std::list<token::TokenType> endTokens = {},
                                                             std::size_t parentPrecedence = token::OperatorUtil::initial);
 
+        std::shared_ptr<syntax::FieldDeclaration> parseFieldDeclaration();
+
+        std::shared_ptr<syntax::Statement> parseStatement();
+
+        std::shared_ptr<syntax::BlockStatement> parseBlockStatement();
+
+        std::shared_ptr<syntax::IfStatement> parseIfStatement();
+
+        std::shared_ptr<syntax::WhileStatement> parseWhileStatement();
+
+        std::shared_ptr<syntax::ContinueStatement> parseContinueStatement();
+
+        std::shared_ptr<syntax::BreakStatement> parseBreakStatement();
+
+        std::shared_ptr<syntax::ReturnStatement> parseReturnStatement();
+
+        std::shared_ptr<syntax::GotoStatement> parseGotoStatement();
+
+        std::shared_ptr<syntax::LabelStatement> parseLabelStatement();
+
+        std::shared_ptr<syntax::ForStatement> parseForStatement();
+        
         bool fillParamList(const std::shared_ptr<syntax::ParamList>& list);
         bool fillGenericTypeList(const std::shared_ptr<syntax::GenericTypeList> &list);
         bool fillModifierList(const std::shared_ptr<syntax::ModifierList>& list);

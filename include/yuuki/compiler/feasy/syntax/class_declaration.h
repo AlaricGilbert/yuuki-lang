@@ -9,19 +9,10 @@
 #include <string>
 #include <memory>
 #include "method_declaration.h"
+#include "field_declaration.h"
 
 namespace yuuki::compiler::feasy::syntax{
-    class FieldDeclaration:public SyntaxNode, public ISyntaxList<Expression>{
-    public:
-        void add(const std::shared_ptr<Expression> &declExpr) override ;
-        void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
-        void writeCurrentInfo(std::ostream& ostream) override;
-        bool hasChild() override ;
-        SyntaxType getType() override ;
 
-    private:
-        std::vector<std::shared_ptr<Expression>> _fieldDeclExprs;
-    };
     class ClassDeclaration:public SyntaxNode,
                            public ISyntaxList<MethodDeclaration>,
                            public ISyntaxList<FieldDeclaration>,

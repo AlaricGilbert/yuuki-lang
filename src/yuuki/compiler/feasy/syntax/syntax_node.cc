@@ -14,8 +14,53 @@ namespace yuuki::compiler::feasy::syntax{
             case SyntaxType::ModifierList:
                 s<<"ModifierList";
                 break;
+            case SyntaxType::VariableDeclarationList:
+                s<<"VariableDeclarationList";
+                break;
             case SyntaxType::BlockStatement:
                 s<<"BlockStatement";
+                break;
+            case SyntaxType::IfStatement:
+                s<<"IfStatement";
+                break;
+            case SyntaxType::ForStatement:
+                s<<"ForStatement";
+                break;
+            case SyntaxType::WhileStatement:
+                s<<"WhileStatement";
+                break;
+            case SyntaxType::DoWhileStatement:
+                s<<"DoWhileStatement";
+                break;
+            case SyntaxType::NopStatement:
+                s<<"NopStatement";
+                break;
+            case SyntaxType::TryCatchStatement:
+                s<<"TryCatchStatement";
+                break;
+            case SyntaxType::SwitchStatement:
+                s<<"SwitchStatement";
+                break;
+            case SyntaxType::CaseStatement:
+                s<<"CaseStatement";
+                break;
+            case SyntaxType::DefaultStatement:
+                s<<"DefaultStatement";
+                break;
+            case SyntaxType::BreakStatement:
+                s<<"BreakStatement";
+                break;
+            case SyntaxType::ContinueStatement:
+                s<<"ContinueStatement";
+                break;
+            case SyntaxType::ReturnStatement:
+                s<<"ReturnStatement";
+                break;
+            case SyntaxType::GotoStatement:
+                s<<"GotoStatement";
+                break;
+            case SyntaxType::LabelStatement:
+                s<<"LabelStatement";
                 break;
             case SyntaxType::NamespaceDeclaration:
                 s<<"NamespaceDeclaration";
