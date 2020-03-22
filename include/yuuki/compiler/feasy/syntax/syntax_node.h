@@ -14,7 +14,6 @@ namespace yuuki::compiler::feasy::syntax{
         ModifierList,
 
         VariableDeclarationList,
-        SwitchElementList,
 
         BlockStatement,
         IfStatement,
@@ -31,6 +30,7 @@ namespace yuuki::compiler::feasy::syntax{
         ReturnStatement,
         GotoStatement,
         LabelStatement,
+        ExpressionStatement,
 
         NamespaceDeclaration,
         ClassDeclaration,

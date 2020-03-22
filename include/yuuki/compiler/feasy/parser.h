@@ -52,12 +52,16 @@ namespace yuuki::compiler::feasy {
 
         std::shared_ptr<syntax::Type> parseType(const std::list<token::TokenType>& errorRecover = {});
 
-        std::shared_ptr<syntax::Expression> parseExpression(const std::list<token::TokenType> endTokens = {},
+        std::shared_ptr<syntax::Expression> parseExpression(const std::list<token::TokenType>& endTokens = {},
                                                             std::size_t parentPrecedence = token::OperatorUtil::initial);
 
         std::shared_ptr<syntax::FieldDeclaration> parseFieldDeclaration();
 
         std::shared_ptr<syntax::Statement> parseStatement();
+
+        std::shared_ptr<syntax::ExpressionStatement> parseExpressionStatement();
+
+        std::shared_ptr<syntax::VariableDeclarationStatement> parseVariableDeclarationStatement();
 
         std::shared_ptr<syntax::BlockStatement> parseBlockStatement();
 
@@ -74,6 +78,12 @@ namespace yuuki::compiler::feasy {
         std::shared_ptr<syntax::GotoStatement> parseGotoStatement();
 
         std::shared_ptr<syntax::LabelStatement> parseLabelStatement();
+
+        std::shared_ptr<syntax::CaseStatement> parseCaseStatement();
+
+        std::shared_ptr<syntax::DefaultStatement> parseDefaultStatement();
+
+        std::shared_ptr<syntax::SwitchStatement> parseSwitchStatement();
 
         std::shared_ptr<syntax::ForStatement> parseForStatement();
         

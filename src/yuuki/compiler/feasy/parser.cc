@@ -471,7 +471,7 @@ namespace yuuki::compiler::feasy{
         }
     }
 
-    std::shared_ptr<Expression> Parser::parseExpression(const std::list<TokenType> endTokens,
+    std::shared_ptr<Expression> Parser::parseExpression(const std::list<TokenType>& endTokens,
                                                                 std::size_t parentPrecedence) {
         std::size_t nextJudgeTokenIndex = getFirstNotComment();
         TokenType nextType = getTokenType(nextJudgeTokenIndex);
@@ -611,20 +611,24 @@ namespace yuuki::compiler::feasy{
                     auto callExpr = std::make_shared<CallExpression>(_tokenIndex,left);
                     parseNextParam:
                     _tokenIndex = getNextNotComment();
-                    auto para = parseExpression(newEndTokens);
-                    callExpr->add(para);
-                    nextJudgeTokenIndex = getNextNotComment();
-                    switch (getTokenType(nextJudgeTokenIndex)){
-                        case TokenType::comma:
-                            _tokenIndex = nextJudgeTokenIndex;
-                            goto parseNextParam;
-                        case TokenType::r_paren:
-                            _tokenIndex = nextJudgeTokenIndex;
-                            callExpr->setRParenIndex(_tokenIndex);
-                            break;
-                        default:
-                            //TODO: push ')' expected.
-                            move(endTokens);
+                    if(getCurrentTokenType() != TokenType::r_paren) {
+                        auto para = parseExpression(newEndTokens);
+                        callExpr->add(para);
+                        nextJudgeTokenIndex = getNextNotComment();
+                        switch (getTokenType(nextJudgeTokenIndex)) {
+                            case TokenType::comma:
+                                _tokenIndex = nextJudgeTokenIndex;
+                                goto parseNextParam;
+                            case TokenType::r_paren:
+                                _tokenIndex = nextJudgeTokenIndex;
+                                callExpr->setRParenIndex(_tokenIndex);
+                                break;
+                            default:
+                                //TODO: push ')' expected.
+                                move(endTokens);
+                        }
+                    } else{
+                        callExpr->setRParenIndex(_tokenIndex);
                     }
                     left = callExpr;
                     break;
@@ -696,6 +700,75 @@ namespace yuuki::compiler::feasy{
         return left;
     }
 
+    std::shared_ptr<VariableDeclarationStatement> Parser::parseVariableDeclarationStatement(){
+        auto stmt = std::make_shared<VariableDeclarationStatement>(parseType());
+
+        parseNextVar:
+        _tokenIndex = getNextNotComment();
+        auto expr = parseExpression({TokenType::semi,TokenType::comma,TokenType::r_brace});
+        _tokenIndex = getNextNotComment();
+        switch (getCurrentTokenType()){
+            case TokenType::semi:
+                stmt->add(expr);
+                stmt->setSemiTokenIndex(_tokenIndex);
+                break;
+            case TokenType::comma:
+                stmt->add(expr);
+                if(getTokenType(getNextNotComment())==TokenType::identifier)
+                    goto parseNextVar;
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected,_context->syntaxID)
+                        .at(_tokenIndex)
+                        .message("semicolon expected")
+                        .suggestion("but meet ',' here")
+                        .build();
+                break;
+            case TokenType::identifier:
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected,_context->syntaxID)
+                        .after(expr->end())
+                        .message("comma expected")
+                        .suggestion("add ',' here")
+                        .build();
+                stmt->add(expr);
+                _tokenIndex = expr->end();
+                goto parseNextVar;
+            default:
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected,_context->syntaxID)
+                        .after(expr->end())
+                        .message("semicolon expected")
+                        .suggestion("add ';' here")
+                        .build();
+                break;
+        }
+        return stmt;
+    }
+
+    std::shared_ptr<BlockStatement> Parser::parseBlockStatement() {
+        auto block = std::make_shared<BlockStatement>(_tokenIndex);
+        _tokenIndex = getNextNotComment();
+        parseNextStmt:
+        switch (getCurrentTokenType()){
+            case TokenType::r_brace:
+                block->setRBraceTokenIndex(_tokenIndex);
+                break;
+            case TokenType::eof:
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::RBraceExpected,_context->syntaxID)
+                    .before(_tokenIndex)
+                    .message("'}' expected")
+                    .suggestion("add '}' here")
+                    .build();
+                break;
+            default:{
+                auto stmt = parseStatement();
+                auto type = getTokenType(stmt->end());
+                if(type == TokenType::r_brace||type == TokenType::eof||type == TokenType::semi)
+                    _tokenIndex = getNextNotComment();
+                block->add(stmt);
+                goto parseNextStmt;
+            }
+        }
+        return block;
+    }
+
     std::shared_ptr<Statement> Parser::parseStatement(){
         switch (getCurrentTokenType()){
             case TokenType::kw_if:
@@ -710,15 +783,73 @@ namespace yuuki::compiler::feasy{
                 return parseReturnStatement();
             case TokenType::kw_goto:
                 return parseGotoStatement();
-            case TokenType::identifier:
-                if(getTokenType(getNextNotComment())==TokenType::op_colon)
+            case TokenType::kw_switch:
+                return parseSwitchStatement();
+            case TokenType::kw_case:
+                return parseCaseStatement();
+            case TokenType::kw_default:
+                return parseDefaultStatement();
+            case TokenType::l_brace:
+                return parseBlockStatement();
+            case TokenType::identifier: {
+                // label:
+                if (getTokenType(getNextNotComment()) == TokenType::op_colon)
                     return parseLabelStatement();
-                return nullptr;
+                std::size_t stmtStartTokenIndex = _tokenIndex;
+                if(getTokenType(getNextNotComment()) == TokenType::identifier||skipOverAGenericArgument()){
+                    if(getTokenType(getNextNotComment()) == TokenType::identifier){
+                        _tokenIndex = stmtStartTokenIndex;
+                        return parseVariableDeclarationStatement();
+                    }
+                }
+                _tokenIndex = stmtStartTokenIndex;
+                return parseExpressionStatement();
+            }
+            case TokenType::l_paren:
+                return parseExpressionStatement();
             case TokenType::semi:
                 return std::make_shared<NopStatement>(_tokenIndex);
+            case TokenType::r_brace:
+            case TokenType::eof:
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected,_context->syntaxID)
+                        .before(_tokenIndex)
+                        .message("statement expected")
+                        .build();
+                return std::make_shared<NopStatement>(_tokenIndex);
             default:
-                return nullptr;
+                std::size_t _startTokenIndex = _tokenIndex;
+                move({TokenType::kw_if,TokenType::kw_while,TokenType::kw_break,TokenType::r_brace,
+                      TokenType::kw_continue,TokenType::kw_return,TokenType::kw_goto,TokenType::semi,TokenType::l_brace,
+                      TokenType::kw_switch,TokenType::kw_case,TokenType::kw_default,TokenType::identifier,TokenType::l_paren});
+                // TODO: push expected tokens error;
+                return parseStatement();
         }
+    }
+
+    std::shared_ptr<ExpressionStatement> Parser::parseExpressionStatement(){
+        auto expr = parseExpression();
+        auto stmt = std::make_shared<ExpressionStatement>(expr);
+        if(getTokenType(getNextNotComment())==TokenType::semi){
+            _tokenIndex = getNextNotComment();
+            stmt->setSemiTokenIndex(_tokenIndex);
+        } else{
+            std::size_t _startTokenIndex = _tokenIndex;
+            move({TokenType::kw_if,TokenType::kw_while,TokenType::kw_break,TokenType::l_brace,
+                  TokenType::kw_continue,TokenType::kw_return,TokenType::kw_goto,TokenType::semi,TokenType::l_paren,
+                  TokenType::kw_switch,TokenType::kw_case,TokenType::kw_default,TokenType::identifier});
+            if(getCurrentTokenType()==TokenType::semi){
+                // TODO: push expected tokens error;
+                stmt->setSemiTokenIndex(_tokenIndex);
+            } else{
+                _tokenIndex = _startTokenIndex;
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected,_context->syntaxID)
+                        .after(_tokenIndex)
+                        .message("semicolon expected")
+                        .suggestion("add ';' here")
+                        .build();
+            }
+        }
+        return stmt;
     }
 
     std::shared_ptr<IfStatement> Parser::parseIfStatement() {
@@ -809,7 +940,7 @@ namespace yuuki::compiler::feasy{
         return std::make_shared<BreakStatement>(breakTokenIndex);
     }
 
-    std::shared_ptr<syntax::ReturnStatement> Parser::parseReturnStatement() {
+    std::shared_ptr<ReturnStatement> Parser::parseReturnStatement() {
         std::size_t returnTokenIndex = _tokenIndex;
         _tokenIndex = getNextNotComment();
         if(getCurrentTokenType() == TokenType::semi)
@@ -828,7 +959,7 @@ namespace yuuki::compiler::feasy{
         return result;
     }
 
-    std::shared_ptr<syntax::GotoStatement> Parser::parseGotoStatement() {
+    std::shared_ptr<GotoStatement> Parser::parseGotoStatement() {
         std::size_t gotoTokenIndex = _tokenIndex;
         _tokenIndex = getNextNotComment();
         std::shared_ptr<Name> labelName;
@@ -855,57 +986,115 @@ namespace yuuki::compiler::feasy{
         return std::make_shared<GotoStatement>(gotoTokenIndex,labelName);
     }
 
-    std::shared_ptr<syntax::LabelStatement> Parser::parseLabelStatement() {
+    std::shared_ptr<LabelStatement> Parser::parseLabelStatement() {
         auto name = parseIdentifier();
         _tokenIndex = getNextNotComment();
         return std::make_shared<LabelStatement>(name,_tokenIndex);
     }
+
+    std::shared_ptr<CaseStatement> Parser::parseCaseStatement() {
+        std::size_t caseTokenIndex = _tokenIndex;
+        std::size_t colonTokenIndex = SyntaxNode::invalidTokenIndex;
+        std::shared_ptr<BlockStatement> caseBlock = nullptr;
+        _tokenIndex = getNextNotComment();
+        std::shared_ptr<Expression> value = parseExpression();
+        _tokenIndex = getNextNotComment();
+        if(getCurrentTokenType() == TokenType::op_colon){
+            colonTokenIndex = _tokenIndex;
+            _tokenIndex = getNextNotComment();
+        } else{
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::ColonExpected,_context->syntaxID)
+                .after(value->end())
+                .message("colon excepted")
+                .suggestion("insert ':' here")
+                .build();
+        }
+        if(getCurrentTokenType() == TokenType::l_brace){
+            caseBlock = parseBlockStatement();
+        } else{
+            if(colonTokenIndex!=SyntaxNode::invalidTokenIndex){
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::ColonExpected,_context->syntaxID)
+                        .after(colonTokenIndex)
+                        .message("'{' excepted")
+                        .suggestion("insert '{' here")
+                        .build();
+            }
+        }
+        return std::make_shared<CaseStatement>(caseTokenIndex, colonTokenIndex, value, caseBlock);
+    }
+
+    std::shared_ptr<DefaultStatement> Parser::parseDefaultStatement() {
+        std::size_t defaultTokenIndex = _tokenIndex;
+        std::size_t colonTokenIndex = SyntaxNode::invalidTokenIndex;
+        std::shared_ptr<BlockStatement> defaultBlock = nullptr;
+        _tokenIndex = getNextNotComment();
+        if(getCurrentTokenType() == TokenType::op_colon){
+            colonTokenIndex = _tokenIndex;
+            _tokenIndex = getNextNotComment();
+        } else{
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::ColonExpected,_context->syntaxID)
+                    .after(defaultTokenIndex)
+                    .message("colon excepted")
+                    .suggestion("insert ':' here")
+                    .build();
+        }
+        if(getCurrentTokenType() == TokenType::l_brace){
+            defaultBlock = parseBlockStatement();
+        } else{
+            if(colonTokenIndex!=SyntaxNode::invalidTokenIndex){
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::LBraceExpected,_context->syntaxID)
+                        .after(colonTokenIndex)
+                        .message("'{' excepted")
+                        .suggestion("insert '{' here")
+                        .build();
+            }
+        }
+        return std::make_shared<DefaultStatement>(defaultTokenIndex, colonTokenIndex, defaultBlock);
+    }
+
+    std::shared_ptr<SwitchStatement> Parser::parseSwitchStatement(){
+        std::size_t switchTokenIndex = _tokenIndex;
+        _tokenIndex = getNextNotComment();
+        auto value = parseExpression();
+        if(value == nullptr){
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::LParenExpected,_context->syntaxID)
+                .after(switchTokenIndex)
+                .message("'(' expected after 'switch'")
+                .build();
+            return std::make_shared<SwitchStatement>(switchTokenIndex);
+        }
+        _tokenIndex = getNextNotComment();
+        if(getTokenType(value->start())!=TokenType::l_paren){
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::LParenExpected,_context->syntaxID)
+                    .before(value->start())
+                    .message("'(' expected after 'switch'")
+                    .build();
+            if(getCurrentTokenType()!=TokenType::r_paren){
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::RParenExpected,_context->syntaxID)
+                        .before(value->start())
+                        .message("')' expected")
+                        .build();
+            } else{
+                _tokenIndex = getNextNotComment();
+            }
+        }
+        if(getCurrentTokenType()==TokenType::l_brace){
+            return std::make_shared<SwitchStatement>(switchTokenIndex,value,parseBlockStatement());
+        }
+        _diagnosticStream << DiagnosticBuilder::error(CompileError::LBraceExpected,_context->syntaxID)
+                .after(_tokenIndex)
+                .message("'{' expected")
+                .build();
+        return std::make_shared<SwitchStatement>(switchTokenIndex,value);
+    }
+
 
     std::shared_ptr<FieldDeclaration> Parser::parseFieldDeclaration() {
         auto modifiers = std::make_shared<ModifierList>();
         fillModifierList(modifiers);
         // move to next not-comment token
         _tokenIndex = getNextNotComment();
-        auto type = parseType();
-        auto field = std::make_shared<FieldDeclaration>(modifiers,type);
-        auto varDeclList = field->getVarDeclList();
-        parseNextVar:
-        _tokenIndex = getNextNotComment();
-        auto expr = parseExpression({TokenType::semi,TokenType::comma,TokenType::r_brace});
-        _tokenIndex = getNextNotComment();
-        switch (getCurrentTokenType()){
-            case TokenType::semi:
-                varDeclList->add(expr);
-                field->setSemiTokenIndex(_tokenIndex);
-                break;
-            case TokenType::comma:
-                varDeclList->add(expr);
-                if(getTokenType(getNextNotComment())==TokenType::identifier)
-                    goto parseNextVar;
-                _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected,_context->syntaxID)
-                        .at(_tokenIndex)
-                        .message("semicolon expected")
-                        .suggestion("but meet ',' here")
-                        .build();
-                break;
-            case TokenType::identifier:
-                _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected,_context->syntaxID)
-                    .after(expr->end())
-                    .message("comma expected")
-                    .suggestion("add ',' here")
-                    .build();
-                varDeclList->add(expr);
-                _tokenIndex = expr->end();
-                goto parseNextVar;
-            default:
-                _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected,_context->syntaxID)
-                        .after(expr->end())
-                        .message("semicolon expected")
-                        .suggestion("add ';' here")
-                        .build();
-                break;
-        }
-        return field;
+        return std::make_shared<FieldDeclaration>(modifiers,parseVariableDeclarationStatement());
     }
 
     bool Parser::skipOverATypeDeclaration() {
@@ -1035,7 +1224,5 @@ namespace yuuki::compiler::feasy{
         }
         return true;
     }
-
-
 
 }

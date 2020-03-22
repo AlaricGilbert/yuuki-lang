@@ -15,7 +15,7 @@ namespace yuuki::compiler::feasy::syntax{
                 s<<"ModifierList";
                 break;
             case SyntaxType::VariableDeclarationList:
-                s<<"VariableDeclarationList";
+                s<<"VariableDeclarationStatement";
                 break;
             case SyntaxType::BlockStatement:
                 s<<"BlockStatement";

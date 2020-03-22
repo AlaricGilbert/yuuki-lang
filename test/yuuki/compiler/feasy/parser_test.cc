@@ -127,7 +127,32 @@ TEST(Parser,parseStatement){
             "while(p)break;",
             "continue;",
             "goto a;",
-            "label_:"
+            "label_:",
+            R"(
+                {
+                    double re = console.read().to_double(),
+                           im = console.read().to_double();
+                    complex r = complex._ctor(re,im);
+                    switch(r.get_type())
+                    {
+                        case complex.type.real:
+                        {
+                            console.log("its' a real number!");
+                            break;
+                        }
+                        case complex.type.imagine:
+                        {
+                            console.log("its' a pure imagine number!");
+                            break;
+                        }
+                        case complex.type.complexed:
+                        {
+                            console.log("its' a complex number!");
+                            break;
+                        }
+                    }
+                }
+)"
     };
     auto sm = std::make_shared<SyntaxContextManager>();
     auto d = std::make_shared<DiagnosticStream>(sm);

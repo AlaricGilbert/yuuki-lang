@@ -492,18 +492,18 @@ namespace yuuki::compiler::feasy::syntax{
 
     SwitchStatement::SwitchStatement(std::size_t switchTokenIndex,
                                      const std::shared_ptr<Expression>& value,
-                                     const std::shared_ptr<SwitchElementList>& caseList){
+                                     const std::shared_ptr<BlockStatement>& cases){
         _switchTokenIndex = switchTokenIndex;
         _value = value;
-        _caseList = caseList;
+        _cases = cases;
     }
 
     void SwitchStatement::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
-        if(_caseList!= nullptr){
+        if(_cases != nullptr){
             if(_value!= nullptr) {
                 syntaxWalker(_value, false);
             }
-            syntaxWalker(_caseList, true);
+            syntaxWalker(_cases, true);
         } else{
             if(_value!= nullptr) {
                 syntaxWalker(_value, true);
@@ -532,7 +532,7 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     bool SwitchStatement::hasChild() {
-        return (_value != nullptr)||(_caseList != nullptr);
+        return (_value != nullptr)||(_cases != nullptr);
     }
 
     std::size_t SwitchStatement::start() {
@@ -540,8 +540,8 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     std::size_t SwitchStatement::end() {
-        if(_caseList!= nullptr)
-            return _caseList->end();
+        if(_cases != nullptr)
+            return _cases->end();
         if(_value!= nullptr)
             return _value->end();
         return _switchTokenIndex;
@@ -651,58 +651,108 @@ namespace yuuki::compiler::feasy::syntax{
         return _defaultTokenIndex;
     }
 
-    SwitchElementList::SwitchElementList(std::size_t lBraceTokenIndex) {
-        _lBraceTokenIndex = lBraceTokenIndex;
-        _rBraceTokenIndex = invalidTokenIndex;
+
+    VariableDeclarationStatement::VariableDeclarationStatement(const std::shared_ptr<Type> &type) {
+        _type = type;
+        _semiTokenIndex = invalidTokenIndex;
     }
 
-    void SwitchElementList::setRBraceTokenIndex(std::size_t rBraceTokenIndex) {
-        _rBraceTokenIndex = rBraceTokenIndex;
+    void VariableDeclarationStatement::setSemiTokenIndex(std::size_t semiTokenIndex){
+        _semiTokenIndex = semiTokenIndex;
     }
 
-    void SwitchElementList::add(const std::shared_ptr<CaseStatement> &child) {
-        _cases.push_back(child);
-    }
-
-    void SwitchElementList::add(const std::shared_ptr<DefaultStatement> &child) {
-        _cases.push_back(child);
-    }
-
-    void SwitchElementList::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
-        for(std::size_t i = 0; i < _cases.size(); i++){
-            syntaxWalker(_cases[i], i == _cases.size() - 1);
+    void
+    VariableDeclarationStatement::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+        syntaxWalker(_type, _varDecls.empty());
+        for (std::size_t i = 0; i < _varDecls.size(); i++){
+            syntaxWalker(_varDecls[i], i == _varDecls.size() - 1);
         }
     }
 
-    void SwitchElementList::writeCurrentInfo(std::ostream &s) {
+    void VariableDeclarationStatement::writeCurrentInfo(std::ostream &s) {
         if(s.rdbuf() == std::cout.rdbuf()){
-            s << rang::fg::magenta  << "SwitchElementList "
+            s << rang::fg::magenta  << "VariableDeclarationStatement "
               << rang::fg::yellow   << "<" << this << "> "
+              << rang::fg::blue     << "type: "
+              << rang::fg::green    << "'" << _type->toString() << "'"
               << rang::fg::reset    << std::endl;
         } else{
-            s << "SwitchElementList "
+            s << "VariableDeclarationStatement "
               << "<" << this << "> "
+              << "condition: "
+              << "'" << _type->toString() << "'"
               << std::endl;
         }
     }
 
-    SyntaxType SwitchElementList::getType() {
-        return SyntaxType::SwitchElementList;
+    void VariableDeclarationStatement::add(const std::shared_ptr<Expression> &varDecl) {
+        _varDecls.push_back(varDecl);
     }
 
-    bool SwitchElementList::hasChild() {
-        return !_cases.empty();
+    SyntaxType VariableDeclarationStatement::getType() {
+        return SyntaxType::VariableDeclarationList;
     }
 
-    std::size_t SwitchElementList::start() {
-        return _lBraceTokenIndex;
+    bool VariableDeclarationStatement::hasChild() {
+        return true;
     }
 
-    std::size_t SwitchElementList::end() {
-        if(_rBraceTokenIndex != invalidTokenIndex)
-            return _rBraceTokenIndex;
-        if(_cases.empty())
-            return _lBraceTokenIndex;
-        return _cases.back()->end();
+    std::size_t VariableDeclarationStatement::start() {
+        return _type->start();
+    }
+
+    std::size_t VariableDeclarationStatement::end() {
+        if(_semiTokenIndex!=invalidTokenIndex)
+            return _semiTokenIndex;
+        if(_varDecls.empty())
+            return _type->end();
+        return _varDecls.back()->end();
+    }
+
+    ExpressionStatement::ExpressionStatement(const std::shared_ptr<Expression> &expression) {
+        _expression = expression;
+        _semiTokenIndex = invalidTokenIndex;
+    }
+
+    void ExpressionStatement::setSemiTokenIndex(std::size_t semiTokenIndex) {
+        _semiTokenIndex = semiTokenIndex;
+    }
+
+    void ExpressionStatement::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+        syntaxWalker(_expression, true);
+    }
+
+    void ExpressionStatement::writeCurrentInfo(std::ostream &s) {
+        if(s.rdbuf() == std::cout.rdbuf()){
+            s << rang::fg::magenta  << "ExpressionStatement "
+              << rang::fg::yellow   << "<" << this << "> "
+              << rang::fg::blue     << "expr: "
+              << rang::fg::green    << "'" << _expression->toString() << "'"
+              << rang::fg::reset    << std::endl;
+        } else{
+            s << "ExpressionStatement "
+              << "<" << this << "> "
+              << "expr: "
+              << "'" << _expression->toString() << "'"
+              << std::endl;
+        }
+    }
+
+    SyntaxType ExpressionStatement::getType() {
+        return SyntaxType::ExpressionStatement;
+    }
+
+    bool ExpressionStatement::hasChild() {
+        return true;
+    }
+
+    std::size_t ExpressionStatement::start() {
+        return _expression->start();
+    }
+
+    std::size_t ExpressionStatement::end() {
+        if(_semiTokenIndex == invalidTokenIndex)
+            return _expression->end();
+        return _semiTokenIndex;
     }
 }

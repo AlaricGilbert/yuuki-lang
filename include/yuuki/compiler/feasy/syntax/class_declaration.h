@@ -1,6 +1,5 @@
 #ifndef YUUKI_CLASS_DECLARATION_H
 #define YUUKI_CLASS_DECLARATION_H
-#include <yuuki/compiler/feasy/syntax/block_statement.h>
 #include <yuuki/compiler/feasy/syntax/import_directive.h>
 #include <yuuki/compiler/feasy/syntax/inherit_type_list.h>
 #include <yuuki/compiler/feasy/syntax/generic.h>

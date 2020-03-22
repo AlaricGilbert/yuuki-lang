@@ -2,14 +2,9 @@
 #include <rang/rang.h>
 
 namespace yuuki::compiler::feasy::syntax{
-    void FieldDeclaration::setSemiTokenIndex(std::size_t semiTokenIndex){
-        _semiTokenIndex = semiTokenIndex;
-    }
-
-
     void FieldDeclaration::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
         syntaxWalker(_modifiers, false);
-        syntaxWalker(_varDeclList, true);
+        syntaxWalker(_varDecl, true);
     }
 
     void FieldDeclaration::writeCurrentInfo(std::ostream &s) {
@@ -31,23 +26,19 @@ namespace yuuki::compiler::feasy::syntax{
         return SyntaxType::FieldDeclaration;
     }
 
-    FieldDeclaration::FieldDeclaration(const std::shared_ptr<ModifierList>& modifiers,const std::shared_ptr<Type>& type) {
-        _varDeclList = std::make_shared<VariableDeclarationList>(type);
+    FieldDeclaration::FieldDeclaration(const std::shared_ptr<ModifierList>& modifiers,
+            const std::shared_ptr<VariableDeclarationStatement>& varDecl) {
+        _varDecl = varDecl;
         _modifiers = modifiers;
-        _semiTokenIndex = invalidTokenIndex;
     }
 
     std::size_t FieldDeclaration::start() {
-        return _modifiers->start();
+        if(_modifiers->hasChild())
+            return _modifiers->start();
+        return _varDecl->start();
     }
 
     std::size_t FieldDeclaration::end() {
-        if(_semiTokenIndex!=invalidTokenIndex)
-            return _semiTokenIndex;
-        return  _varDeclList->end();
-    }
-
-    std::shared_ptr<VariableDeclarationList> FieldDeclaration::getVarDeclList() {
-        return _varDeclList;
+        return  _varDecl->end();
     }
 }

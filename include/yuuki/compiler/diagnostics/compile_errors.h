@@ -12,12 +12,15 @@ namespace yuuki::compiler::diagnostics{
         UnexpectedToken = 2000,
         SemiExpected,
         CommaExpected,
+        LBraceExpected,
         RBraceExpected,
+        LParenExpected,
         RParenExpected,
         RSquareExpected,
         GreaterExpected,
         IdentifierExpected,
         ImportExpected,
+        ColonExpected,
 
     };
 }
