@@ -57,8 +57,8 @@ namespace yuuki::compiler::feasy::syntax{
 
     ForStatement::ForStatement(std::size_t forTokenIndex,
                                const std::shared_ptr<Statement>& init,
-                               const std::shared_ptr<Statement>& condition,
-                               const std::shared_ptr<Statement>& post,
+                               const std::shared_ptr<Expression>& condition,
+                               const std::shared_ptr<Expression>& post,
                                const std::shared_ptr<Statement>& body){
         _forTokenIndex = forTokenIndex;
         _init = init;
@@ -68,10 +68,14 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     void ForStatement::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
-        syntaxWalker(_init, false);
+        if(_init != nullptr)
+            syntaxWalker(_init, false);
+        if(_condition != nullptr)
         syntaxWalker(_condition, false);
-        syntaxWalker(_post, false);
-        syntaxWalker(_body, true);
+        if(_post != nullptr)
+            syntaxWalker(_post, false);
+        if(_body != nullptr)
+            syntaxWalker(_body, true);
     }
 
     void ForStatement::writeCurrentInfo(std::ostream &s) {
@@ -91,7 +95,10 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     bool ForStatement::hasChild() {
-        return true;
+        return _init != nullptr ||
+               _condition != nullptr ||
+               _post != nullptr ||
+               _body != nullptr;
     }
 
     std::size_t ForStatement::start() {
@@ -99,7 +106,15 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     std::size_t ForStatement::end() {
-        return _body->end();
+        if(_body != nullptr)
+            return _body->end();
+        if(_post != nullptr)
+            return _post->end();
+        if(_condition != nullptr)
+            return _condition->end();
+        if(_init != nullptr)
+            return _init->end();
+        return _forTokenIndex;
     }
 
     WhileStatement::WhileStatement(std::size_t whileTokenIndex,

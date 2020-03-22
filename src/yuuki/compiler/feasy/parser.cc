@@ -770,7 +770,7 @@ namespace yuuki::compiler::feasy{
     }
 
     std::shared_ptr<Statement> Parser::parseStatement(){
-        switch (getCurrentTokenType()){
+        switch (getCurrentTokenType()) {
             case TokenType::kw_if:
                 return parseIfStatement();
             case TokenType::kw_while:
@@ -789,6 +789,8 @@ namespace yuuki::compiler::feasy{
                 return parseCaseStatement();
             case TokenType::kw_default:
                 return parseDefaultStatement();
+            case TokenType::kw_for:
+                return parseForStatement();
             case TokenType::l_brace:
                 return parseBlockStatement();
             case TokenType::identifier: {
@@ -796,8 +798,8 @@ namespace yuuki::compiler::feasy{
                 if (getTokenType(getNextNotComment()) == TokenType::op_colon)
                     return parseLabelStatement();
                 std::size_t stmtStartTokenIndex = _tokenIndex;
-                if(getTokenType(getNextNotComment()) == TokenType::identifier||skipOverAGenericArgument()){
-                    if(getTokenType(getNextNotComment()) == TokenType::identifier){
+                if (getTokenType(getNextNotComment()) == TokenType::identifier || skipOverAGenericArgument()) {
+                    if (getTokenType(getNextNotComment()) == TokenType::identifier) {
                         _tokenIndex = stmtStartTokenIndex;
                         return parseVariableDeclarationStatement();
                     }
@@ -811,16 +813,28 @@ namespace yuuki::compiler::feasy{
                 return std::make_shared<NopStatement>(_tokenIndex);
             case TokenType::r_brace:
             case TokenType::eof:
-                _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected,_context->syntaxID)
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::CommaExpected, _context->syntaxID)
                         .before(_tokenIndex)
                         .message("statement expected")
                         .build();
                 return std::make_shared<NopStatement>(_tokenIndex);
             default:
                 std::size_t _startTokenIndex = _tokenIndex;
-                move({TokenType::kw_if,TokenType::kw_while,TokenType::kw_break,TokenType::r_brace,
-                      TokenType::kw_continue,TokenType::kw_return,TokenType::kw_goto,TokenType::semi,TokenType::l_brace,
-                      TokenType::kw_switch,TokenType::kw_case,TokenType::kw_default,TokenType::identifier,TokenType::l_paren});
+                move({TokenType::kw_if,
+                      TokenType::kw_while,
+                      TokenType::kw_break,
+                      TokenType::r_brace,
+                      TokenType::kw_continue,
+                      TokenType::kw_return,
+                      TokenType::kw_goto,
+                      TokenType::semi,
+                      TokenType::l_brace,
+                      TokenType::kw_for,
+                      TokenType::kw_switch,
+                      TokenType::kw_case,
+                      TokenType::kw_default,
+                      TokenType::identifier,
+                      TokenType::l_paren});
                 // TODO: push expected tokens error;
                 return parseStatement();
         }
@@ -834,9 +848,21 @@ namespace yuuki::compiler::feasy{
             stmt->setSemiTokenIndex(_tokenIndex);
         } else{
             std::size_t _startTokenIndex = _tokenIndex;
-            move({TokenType::kw_if,TokenType::kw_while,TokenType::kw_break,TokenType::l_brace,
-                  TokenType::kw_continue,TokenType::kw_return,TokenType::kw_goto,TokenType::semi,TokenType::l_paren,
-                  TokenType::kw_switch,TokenType::kw_case,TokenType::kw_default,TokenType::identifier});
+            move({TokenType::kw_if,
+                  TokenType::kw_while,
+                  TokenType::kw_break,
+                  TokenType::r_brace,
+                  TokenType::kw_continue,
+                  TokenType::kw_return,
+                  TokenType::kw_goto,
+                  TokenType::semi,
+                  TokenType::l_brace,
+                  TokenType::kw_for,
+                  TokenType::kw_switch,
+                  TokenType::kw_case,
+                  TokenType::kw_default,
+                  TokenType::identifier,
+                  TokenType::l_paren});
             if(getCurrentTokenType()==TokenType::semi){
                 // TODO: push expected tokens error;
                 stmt->setSemiTokenIndex(_tokenIndex);
@@ -1089,6 +1115,86 @@ namespace yuuki::compiler::feasy{
     }
 
 
+    std::shared_ptr<ForStatement> Parser::parseForStatement() {
+        std::size_t forTokenIndex = _tokenIndex;
+        _tokenIndex = getNextNotComment();
+        if(getCurrentTokenType() != TokenType::l_paren){
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::LParenExpected,_context->syntaxID)
+                    .after(forTokenIndex)
+                    .message("'(' expected after 'for'")
+                    .build();
+            _tokenIndex = forTokenIndex;
+        } else{
+            _tokenIndex = getNextNotComment();
+        }
+        std::size_t stmtStartTokenIndex = _tokenIndex;
+        std::shared_ptr<Statement> init = nullptr;
+        std::shared_ptr<Expression> condition = nullptr;
+        std::shared_ptr<Expression>  post = nullptr;
+        std::shared_ptr<Statement> body = nullptr;
+        if(getTokenType(getNextNotComment()) == TokenType::semi){
+            init = std::make_shared<NopStatement>(_tokenIndex);
+        } else {
+            if (getTokenType(getNextNotComment()) == TokenType::identifier || skipOverAGenericArgument()) {
+                if (getTokenType(getNextNotComment()) == TokenType::identifier) {
+                    _tokenIndex = stmtStartTokenIndex;
+                    init = parseVariableDeclarationStatement();
+                } else{
+                    _tokenIndex = stmtStartTokenIndex;
+                    init = parseExpressionStatement();
+                    _tokenIndex = getNextNotComment();
+                }
+            } else {
+                _tokenIndex = stmtStartTokenIndex;
+                init = parseExpressionStatement();
+                _tokenIndex = getNextNotComment();
+            }
+        }
+        if(getTokenType(_tokenIndex)!=TokenType::semi){
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::LParenExpected,_context->syntaxID)
+                    .before(init->end())
+                    .message("';' expected")
+                    .build();
+            _tokenIndex = init->end();
+            goto formResult;
+        } else{
+            _tokenIndex = getNextNotComment();
+        }
+
+        condition = parseExpression();
+        _tokenIndex = getNextNotComment();
+        if(getCurrentTokenType()!=TokenType::semi){
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::SemiExpected,_context->syntaxID)
+                    .before(condition->end())
+                    .message("';' expected")
+                    .build();
+            _tokenIndex = condition->end();
+            goto formResult;
+
+        } else{
+            _tokenIndex = getNextNotComment();
+        }
+
+        post = parseExpression();
+        _tokenIndex = getNextNotComment();
+        if(getCurrentTokenType()!=TokenType::r_paren){
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::RParenExpected,_context->syntaxID)
+                    .before(condition->end())
+                    .message("')' expected")
+                    .build();
+            _tokenIndex = condition->end();
+            goto formResult;
+
+        } else{
+            _tokenIndex = getNextNotComment();
+        }
+
+        body = parseStatement();
+        formResult:
+        return std::make_shared<ForStatement>(forTokenIndex,init,condition,post,body);
+    }
+
+
     std::shared_ptr<FieldDeclaration> Parser::parseFieldDeclaration() {
         auto modifiers = std::make_shared<ModifierList>();
         fillModifierList(modifiers);
@@ -1224,5 +1330,4 @@ namespace yuuki::compiler::feasy{
         }
         return true;
     }
-
 }

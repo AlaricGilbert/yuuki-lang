@@ -152,6 +152,12 @@ TEST(Parser,parseStatement){
                         }
                     }
                 }
+)",
+            R"(
+for(int i = 1;i < int32.max();i++){
+    console.log(math.log(i));
+}
+
 )"
     };
     auto sm = std::make_shared<SyntaxContextManager>();

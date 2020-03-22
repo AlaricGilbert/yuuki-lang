@@ -37,11 +37,11 @@ namespace yuuki::compiler::feasy::syntax{
 
     class ForStatement:public Statement{
     public:
-        ForStatement(std::size_t forTokenIndex,
-                     const std::shared_ptr<Statement>& init,
-                     const std::shared_ptr<Statement>& condition,
-                     const std::shared_ptr<Statement>& post,
-                     const std::shared_ptr<Statement>& body);
+        explicit ForStatement(std::size_t forTokenIndex,
+                     const std::shared_ptr<Statement>& init = nullptr,
+                     const std::shared_ptr<Expression>& condition = nullptr,
+                     const std::shared_ptr<Expression>& post = nullptr,
+                     const std::shared_ptr<Statement>& body = nullptr);
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream& ostream) override;
         SyntaxType getType() override ;
@@ -51,8 +51,8 @@ namespace yuuki::compiler::feasy::syntax{
         private:
         std::size_t _forTokenIndex;
         std::shared_ptr<Statement> _init;
-        std::shared_ptr<Statement> _condition;
-        std::shared_ptr<Statement> _post;
+        std::shared_ptr<Expression> _condition;
+        std::shared_ptr<Expression> _post;
         std::shared_ptr<Statement> _body;
     };
 
