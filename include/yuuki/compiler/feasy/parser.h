@@ -86,7 +86,7 @@ namespace yuuki::compiler::feasy {
         std::shared_ptr<syntax::SwitchStatement> parseSwitchStatement();
 
         std::shared_ptr<syntax::ForStatement> parseForStatement();
-        
+
         bool fillParamList(const std::shared_ptr<syntax::ParamList>& list);
         bool fillGenericTypeList(const std::shared_ptr<syntax::GenericTypeList> &list);
         bool fillModifierList(const std::shared_ptr<syntax::ModifierList>& list);

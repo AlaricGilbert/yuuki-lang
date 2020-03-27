@@ -15,6 +15,7 @@ namespace yuuki::compiler::feasy{
     }
 
     void Parser::parse() {
+        _context->syntaxTree = std::make_shared<SyntaxUnit>();
         // the recovery lambda for main parse section
         auto recover = [&]() -> void {
             move({
@@ -25,18 +26,80 @@ namespace yuuki::compiler::feasy{
                 #include <yuuki/compiler/feasy/token/tokens.inc>
                 TokenType::inline_comment,
                 TokenType::interline_comment,
-                TokenType::semi
+                TokenType::semi,
+                TokenType::kw_class
             });
         };
         while (_tokenIndex < _context->tokens.size()){
-            switch (_context->tokens[_tokenIndex]->type){
+            switch (getCurrentTokenType()){
                 // we are going to handle the main situations in the global syntax unit
-                case TokenType::kw_import:
-                    //parseImportDirective();
+                case TokenType::kw_import:{
+                    std::size_t importTokenIndex = _tokenIndex;
+                    _tokenIndex = getNextNotComment();
+                    if(getCurrentTokenType() == TokenType::identifier){
+                        auto importName = parseName();
+                        if(getTokenType(getNextNotComment())==TokenType::semi){
+                            _tokenIndex = getNextNotComment();
+                            _context->syntaxTree->add(std::make_shared<ImportDirective>(importName,importTokenIndex,
+                                    _tokenIndex));
+                        } else{
+                            _context->syntaxTree->add(std::make_shared<ImportDirective>(importName,importTokenIndex));
+                            _diagnosticStream << DiagnosticBuilder::error(CompileError::SemiExpected,_context->syntaxID)
+                                .after(importName->end())
+                                .message("';' expected")
+                                .build();
+                        }
+                    } else{
+                        _diagnosticStream << DiagnosticBuilder::error(CompileError::IdentifierExpected,_context->syntaxID)
+                                .after(_tokenIndex)
+                                .message("identifier expected")
+                                .build();
+                    }
                     break;
-                case TokenType::kw_namespace:
+                }
+                case TokenType::kw_namespace: {
+                    std::size_t nsTokenIndex = _tokenIndex;
+                    _tokenIndex = getNextNotComment();
+                    if(getCurrentTokenType()==TokenType::identifier){
+                        auto nsName = parseName();
+                        auto namespaceDecl = std::make_shared<NamespaceDeclaration>(nsTokenIndex,nsName);
+                        _tokenIndex =  getNextNotComment();
+                        if(getCurrentTokenType()==TokenType::l_brace){
+                            namespaceDecl->setLBraceTokenIndex(_tokenIndex);
+                            _tokenIndex = getNextNotComment();
+                            parseNextNsMember:
+                            switch (getCurrentTokenType()){
+                                case TokenType::kw_class:
+                                #define MODIFIER(X) case TokenType::kw_##X:
+                                #include <yuuki/compiler/feasy/token/tokens.inc>
+                                    namespaceDecl->add(parseClass());
+                                    _tokenIndex = getNextNotComment();
+                                    goto parseNextNsMember;
+                                case TokenType::r_brace:
+                                    namespaceDecl->setRBraceTokenIndex(_tokenIndex);
+                                    break;
+                                case TokenType::eof:
+                                    _diagnosticStream << DiagnosticBuilder::error(CompileError::RBraceExpected,_context->syntaxID)
+                                            .after(_tokenIndex)
+                                            .message("')' expected")
+                                            .build();
+                                    break;
+                                default:
+                                    // TODO: push unexpected tokens error
+                                    move({
+#define MODIFIER(X) TokenType::kw_##X,
+#include <yuuki/compiler/feasy/token/tokens.inc>
+                                        TokenType::kw_class,TokenType::r_brace
+                                    });
+                                    goto parseNextNsMember;
+
+                            }
+                        }
+                        _context->syntaxTree->add(namespaceDecl);
+                    }
                     //parseNamespaceDeclaration();
                     break;
+                }
                 // we are going to handle modifiers which may be added to tokens.inc in the future design!
                 // so we use marcos to generate modifier list, codes are generated like:
                 //     case TokenType::kw_public:
@@ -122,6 +185,7 @@ namespace yuuki::compiler::feasy{
                     // TODO: push error 'UnexpectedTokens'
                     break;
             }
+            _tokenIndex++;
         }
     }
 
@@ -155,8 +219,10 @@ namespace yuuki::compiler::feasy{
         std::shared_ptr<Name> name;
         // parse the modifiers
         fillModifierList(modifiers);
+        // judge for non-modifier mode
+        if(_context->tokens[_tokenIndex]->is(TokenType::modifiers))
         // jump to class token
-        _tokenIndex = getNextNotComment();
+            _tokenIndex = getNextNotComment();
         std::size_t classTokenIndex = _tokenIndex;
         _tokenIndex = getNextNotComment();
         name = parseName();
@@ -213,7 +279,8 @@ namespace yuuki::compiler::feasy{
             _tokenIndex = getNextNotComment();
             std::size_t memberStart = _tokenIndex;
             skipOverAModifierList();
-            _tokenIndex = getNextNotComment();
+            if(getCurrentTokenType()==TokenType::modifiers)
+                _tokenIndex = getNextNotComment();
             switch (getCurrentTokenType())
             {
                 case TokenType::kw_class:
@@ -1036,7 +1103,6 @@ namespace yuuki::compiler::feasy{
         return std::make_shared<IfStatement>(ifTokenId,condition,ifClause);
     }
 
-
     std::shared_ptr<WhileStatement> Parser::parseWhileStatement() {
         auto whileTokenId = _tokenIndex;
         _tokenIndex = getNextNotComment();
@@ -1062,7 +1128,6 @@ namespace yuuki::compiler::feasy{
         }
         return std::make_shared<WhileStatement>(whileTokenId,condition,parseStatement());
     }
-
 
     std::shared_ptr<ContinueStatement> Parser::parseContinueStatement() {
         std::size_t continueTokenIndex = _tokenIndex;
@@ -1238,7 +1303,6 @@ namespace yuuki::compiler::feasy{
         return std::make_shared<SwitchStatement>(switchTokenIndex,value);
     }
 
-
     std::shared_ptr<ForStatement> Parser::parseForStatement() {
         std::size_t forTokenIndex = _tokenIndex;
         _tokenIndex = getNextNotComment();
@@ -1317,7 +1381,6 @@ namespace yuuki::compiler::feasy{
         formResult:
         return std::make_shared<ForStatement>(forTokenIndex,init,condition,post,body);
     }
-
 
     std::shared_ptr<FieldDeclaration> Parser::parseFieldDeclaration() {
         auto modifiers = std::make_shared<ModifierList>();

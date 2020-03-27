@@ -194,3 +194,27 @@ TEST(Parser,parseMethodDecl){
     }
     std::cout << *d;
 }
+
+TEST(Parser,parse){
+    auto code =
+R"(
+import yuuki.std;
+
+namespace foo.bar{
+    class program{
+        public static void main(string[] args){
+            console.log("Hello, world!");
+        }
+    }
+}
+)";
+    auto sm = std::make_shared<SyntaxContextManager>();
+    auto d = std::make_shared<DiagnosticStream>(sm);
+    auto context = sm->create(code);
+    Lexer l = Lexer(context,d);
+    Parser p = Parser(context,d);
+    l.lex();
+    p.parse();
+    std::cout << *(*sm)[0]->syntaxTree;
+    std::cout << *d;
+}

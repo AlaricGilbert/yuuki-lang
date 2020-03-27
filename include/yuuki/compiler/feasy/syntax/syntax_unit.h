@@ -17,6 +17,8 @@ namespace yuuki::compiler::feasy::syntax{
         void add(const std::shared_ptr<NamespaceDeclaration> &child) override;
         void add(const std::shared_ptr<ClassDeclaration> &child) override;
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        std::size_t start() override;
+        std::size_t end() override;
     private:
         std::vector<std::shared_ptr<SyntaxNode>> _syntax;
     };

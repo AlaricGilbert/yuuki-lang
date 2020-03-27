@@ -88,12 +88,12 @@ namespace yuuki::compiler::feasy::syntax {
 
     void Expression::writeCurrentInfo(std::ostream &s) {
         if (s.rdbuf() == std::cout.rdbuf()) {
-            s << rang::fg::gray << getType()
+            s << rang::fg::gray   << " " << getType()
               << rang::fg::yellow << "<" << this << "> "
-              << rang::fg::green << "'" << toString() << "' "
-              << rang::fg::reset << std::endl;
+              << rang::fg::green  << "'" << toString() << "' "
+              << rang::fg::reset  << std::endl;
         } else {
-            s << getType()
+            s << " " << getType()
               << "<" << this << "> "
               << "'" << toString() << "' " << std::endl;
         }

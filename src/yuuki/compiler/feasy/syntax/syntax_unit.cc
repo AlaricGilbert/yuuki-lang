@@ -39,4 +39,16 @@ namespace yuuki::compiler::feasy::syntax{
             syntaxWalker(_syntax[i],i == _syntax.size() - 1);
         }
     }
+
+    std::size_t SyntaxUnit::start() {
+        if(_syntax.empty())
+            return invalidTokenIndex;
+        return _syntax.front()->start();
+    }
+
+    std::size_t SyntaxUnit::end() {
+        if(_syntax.empty())
+            return invalidTokenIndex;
+        return _syntax.back()->end();
+    }
 }

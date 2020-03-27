@@ -2,8 +2,19 @@
 #include <rang/rang.h>
 
 namespace yuuki::compiler::feasy::syntax{
-    NamespaceDeclaration::NamespaceDeclaration(const std::shared_ptr<Name> &nsName) {
+    NamespaceDeclaration::NamespaceDeclaration(std::size_t nsTokenIndex, const std::shared_ptr<Name> &nsName) {
         _nsName = nsName;
+        _nsTokenIndex = nsTokenIndex;
+        _lBraceTokenIndex = invalidTokenIndex;
+        _rBraceTokenIndex = invalidTokenIndex;
+    }
+
+    void NamespaceDeclaration::setLBraceTokenIndex(std::size_t lBraceTokenIndex) {
+        _lBraceTokenIndex = lBraceTokenIndex;
+    }
+
+    void NamespaceDeclaration::setRBraceTokenIndex(std::size_t rBraceTokenIndex) {
+        _rBraceTokenIndex = rBraceTokenIndex;
     }
 
     void NamespaceDeclaration::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
@@ -37,5 +48,13 @@ namespace yuuki::compiler::feasy::syntax{
 
     void NamespaceDeclaration::add(const std::shared_ptr<ClassDeclaration> &child) {
         _children.push_back(child);
+    }
+
+    std::size_t NamespaceDeclaration::start() {
+        return _nsTokenIndex;
+    }
+
+    std::size_t NamespaceDeclaration::end() {
+        return 0;
     }
 }
