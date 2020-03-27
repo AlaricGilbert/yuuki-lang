@@ -1,4 +1,5 @@
 #include <yuuki/compiler/feasy/syntax_context.h>
+#include <algorithm>
 
 
 namespace yuuki::compiler::feasy{
@@ -14,6 +15,13 @@ namespace yuuki::compiler::feasy{
                 lines.push_back(code.substr(lastLine, i - lastLine));
                 lastLine = i + 1;
             }
+        }
+        // handle with
+        // "....str"
+        //         ^  not end with \n!
+        if(lastLine != code.size()){
+            lineStartPos.push_back(lastLine);
+            lines.push_back(code.substr(lastLine));
         }
     }
 

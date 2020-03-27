@@ -25,7 +25,7 @@ which can switch line by this way";
 
 
     auto sm = std::make_shared<SyntaxContextManager>();
-    auto d = std::make_shared<Diagnostic>(sm);
+    auto d = std::make_shared<DiagnosticStream>(sm);
     auto context = sm->create(code);
     Lexer lexer = Lexer(context,d);
     lexer.lex();
@@ -145,8 +145,9 @@ namespace yuuki.test.foo {
 
 
     auto sm = std::make_shared<SyntaxContextManager>();
-    auto d = std::make_shared<Diagnostic>(sm);
+    auto d = std::make_shared<DiagnosticStream>(sm);
     auto context = sm->create(code);
+    context->codePath = "INTERNAL_TEST/lexFailTest.yuk";
     Lexer lexer = Lexer(context,d);
     lexer.lex();
 
@@ -236,12 +237,13 @@ namespace yuuki.test.foo {
     for (int i = 0; i < 57; ++i) {
         auto type = context->tokens[i]->type;
         EXPECT_EQ(type,type_lists[i]);
-        if (i == 50)
+        if (i == 50) {
             EXPECT_TRUE(true);
+        }
         if (type == TokenType::inline_comment || type == TokenType::interline_comment ||
             type == TokenType::numeric_const || type == TokenType::string_const ||type == TokenType::identifier) {
             EXPECT_EQ(literal_vars[j++], (std::string)context->tokens[i]->rawCode);
         }
     }
-    d->printErrors();
+    std::cout << *d;
 }

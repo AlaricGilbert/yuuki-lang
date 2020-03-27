@@ -5,12 +5,23 @@ namespace yuuki::compiler::diagnostics{
     enum class CompileError{
         // YK1000-1999: lexical errors
         UnexpectedChars = 1000,
-        StringNotClosed = 1001,
-        InvalidNumericConst = 1002,
-        InterlineCommentNotClosed = 1003,
+        StringNotClosed,
+        InvalidNumericConst,
+        InterlineCommentNotClosed,
         // YK2000-2999: parse errors
         UnexpectedToken = 2000,
-        SemiExpected = 2001
+        SemiExpected,
+        CommaExpected,
+        LBraceExpected,
+        RBraceExpected,
+        LParenExpected,
+        RParenExpected,
+        RSquareExpected,
+        GreaterExpected,
+        IdentifierExpected,
+        ImportExpected,
+        ColonExpected,
+
     };
 }
 #endif //YUUKI_COMPILE_ERRORS_H

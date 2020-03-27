@@ -2,7 +2,6 @@
 #define YUUKI_TOKEN_TOKEN_H
 
 #include <yuuki/compiler/feasy/token/token_type.h>
-#include <iostream>
 namespace yuuki::compiler::feasy::token{
     /**
      * Represents a token in the source code.

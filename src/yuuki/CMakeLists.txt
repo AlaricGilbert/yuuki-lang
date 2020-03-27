@@ -1,8 +1,8 @@
 file(GLOB_RECURSE core_lib_srcs RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cc *.h)
 file(GLOB executable_srcs RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cc *.h)
 list(REMOVE_ITEM core_lib_srcs ${executable_srcs})
-add_library(yukcorlib SHARED ${core_lib_srcs})
-add_library(yukcorlib_static STATIC ${core_lib_srcs})
+#add_library(yukcorlib SHARED ${core_lib_srcs})
+add_library(yukcorlib SHARED STATIC ${core_lib_srcs})
 add_executable(yuc yuc.cc)
 add_executable(yuuki yuuki.cc)
 

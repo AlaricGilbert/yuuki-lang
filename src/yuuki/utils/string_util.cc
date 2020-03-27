@@ -1,4 +1,5 @@
-#include "yuuki/utils/string_util.h"
+#include <yuuki/utils/string_util.h>
+#include <cstring>
 
 namespace yuuki::utils{
 
