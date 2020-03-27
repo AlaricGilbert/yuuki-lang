@@ -167,8 +167,6 @@ namespace yuuki::compiler::feasy{
             _tokenIndex = nextJudgeTokenIndex;
             fillGenericTypeList(genDecl);
             nextJudgeTokenIndex = getNextNotComment();
-        } else{
-            //genDecl = std::make_shared<GenericDeclaration>(SyntaxNode::invalidTokenIndex);
         }
         if(getTokenType(nextJudgeTokenIndex)==TokenType::op_colon){
             _tokenIndex = nextJudgeTokenIndex;
@@ -215,6 +213,7 @@ namespace yuuki::compiler::feasy{
             _tokenIndex = getNextNotComment();
             std::size_t memberStart = _tokenIndex;
             skipOverAModifierList();
+            _tokenIndex = getNextNotComment();
             switch (getCurrentTokenType())
             {
                 case TokenType::kw_class:
@@ -226,21 +225,22 @@ namespace yuuki::compiler::feasy{
                         errorHandle();
                         goto parseNextMember;
                     }
-                    _tokenIndex = getNextNotComment();
+                    _tokenIndex = getNextNotComment();  // skip over name
                     switch (getTokenType(getNextNotComment())){
                         case TokenType::op_equal:
                         case TokenType::semi:
                             _tokenIndex = memberStart;
-                            //classDecl->add(parse)
+                            classDecl->add(parseFieldDeclaration());
+                            goto parseNextMember;
                         case TokenType::op_less:
-                        case TokenType::l_brace:
+                        case TokenType::l_paren:
                             _tokenIndex = memberStart;
                             classDecl->add(parseMethodDeclaration());
+                            goto parseNextMember;
                         default:
                             errorHandle();
                             goto parseNextMember;
                     }
-
                 }
                 case TokenType::eof:
                     break;
@@ -341,8 +341,8 @@ namespace yuuki::compiler::feasy{
         // -----------------  |  -------------  |              |  -------------------------
         //        ^           |  ^              |              |
         //        |           |  |              |              |
-        //  parsed by parent  | we are here;    | the id is    |  <-... after this we cannot 
-        //  funtions that     | a valid type    | also ensure  |  ensure any token relation
+        //  ignored by parent | parent ensured  | the id is    |  <-... after this we cannot
+        //  functions that    | a valid type    | also ensure  |  ensure any token relation
         //  called this       | is ensured.     |              |  
         //
         //                    -----------------------       / BlockStatement: method body
@@ -350,13 +350,18 @@ namespace yuuki::compiler::feasy{
         //                    -----------------------       \ SemiToken ';' : just declaraion (for interfaces)
         //
         //
+        std::shared_ptr<ModifierList> modifiers = std::make_shared<ModifierList>();
+        if(_context->tokens[_tokenIndex]->is(TokenType::modifiers)) {
+            fillModifierList(modifiers);
+            _tokenIndex = getNextNotComment();
+        }
+
 
         // from graph upward, we can directly parse a type definition and a identifier
         // for method variable establish.
-        auto returnType = parseType();
+        std::shared_ptr<Type> returnType = parseType();
         _tokenIndex = getNextNotComment(); // move to next non-comment token, just the place of the identifier
-        auto methodName = parseName();
-
+        std::shared_ptr<IdentifierName> methodName = parseIdentifier();
         // get next non-comment token, which is the key choise for whether a generic arg or directly param decl
         std::size_t nextJudgeTokenIndex = getNextNotComment();
         // from the graph upward, we only have two situations should be parsed here:
@@ -367,14 +372,51 @@ namespace yuuki::compiler::feasy{
         //                                    ^
         //                       nextJudgeTokenIndex is here
         //
-        if(getTokenType(nextJudgeTokenIndex)==TokenType::op_less){
-            
-        }
-        nextJudgeTokenIndex = getNextNotComment();
-        if(getTokenType(nextJudgeTokenIndex)==TokenType::identifier){
+        std::shared_ptr<GenericTypeList> generic = std::make_shared<GenericTypeList>();
 
+        std::shared_ptr<ParamList> params = std::make_shared<ParamList>();
+        std::size_t lParenIndex = SyntaxNode::invalidTokenIndex;
+        std::size_t rParenIndex = SyntaxNode::invalidTokenIndex;
+        std::shared_ptr<Statement> body;
+        if(getTokenType(nextJudgeTokenIndex)==TokenType::op_less){
+            _tokenIndex = nextJudgeTokenIndex;
+            fillGenericTypeList(generic);
+            if(getCurrentTokenType()==TokenType::op_greater)
+                nextJudgeTokenIndex = getNextNotComment();
+            else
+                nextJudgeTokenIndex = _tokenIndex;
         }
-        return nullptr;
+        if(getTokenType(nextJudgeTokenIndex)==TokenType::l_paren){
+            _tokenIndex = nextJudgeTokenIndex;
+            fillParamList(params);
+            if(getCurrentTokenType()!=TokenType::r_paren)
+                goto form_result;
+            nextJudgeTokenIndex = getNextNotComment();
+        } else{
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::LParenExpected,_context->syntaxID)
+                .before(nextJudgeTokenIndex)
+                .message("'(' expected")
+                .build();
+            goto form_result;
+        }
+        if(getTokenType(nextJudgeTokenIndex) == TokenType::semi)
+            body = std::make_shared<NopStatement>(nextJudgeTokenIndex);
+        else if(getTokenType(nextJudgeTokenIndex) == TokenType::l_brace){
+            _tokenIndex = nextJudgeTokenIndex;
+            body = parseBlockStatement();
+        } else{
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::LParenExpected,_context->syntaxID)
+                .before(nextJudgeTokenIndex)
+                .message("'{' expected")
+                .build();
+        }
+        form_result:
+        if(body == nullptr)
+            body = std::make_shared<NopStatement>(SyntaxNode::invalidTokenIndex);
+        auto method = std::make_shared<MethodDeclaration>(modifiers,returnType,methodName,generic,params,body);
+        method->setLParenIndex(lParenIndex);
+        method->setRParenIndex(rParenIndex);
+        return method;
     }
 
     bool Parser::fillGenericTypeList(const std::shared_ptr<GenericTypeList>& list){
@@ -455,7 +497,87 @@ namespace yuuki::compiler::feasy{
     }
 
     bool Parser::fillParamList(const std::shared_ptr<ParamList> &list){
-        return true;
+        // we are heading:
+        // (...)
+        // ^
+        parseNext:
+        std::size_t nextJudgeTokebnIndex = getNextNotComment();
+        switch (getTokenType(nextJudgeTokebnIndex)){
+            case TokenType::identifier:{
+                _tokenIndex = nextJudgeTokebnIndex;
+                auto type = parseType();
+                nextJudgeTokebnIndex = getNextNotComment();
+                if(getTokenType(nextJudgeTokebnIndex)==TokenType::identifier){
+                    _tokenIndex = nextJudgeTokebnIndex;
+                    auto paramName = parseIdentifier();
+                    auto paramDecl = std::make_shared<ParamDeclaration>(type,paramName);
+                    nextJudgeTokebnIndex = getNextNotComment();
+                    switch (getTokenType(nextJudgeTokebnIndex)){
+                        case TokenType::comma:{
+                            _tokenIndex = nextJudgeTokebnIndex;
+                            list->add(paramDecl);
+                            goto parseNext;
+                        }
+                        case TokenType::r_paren:{
+                            _tokenIndex = nextJudgeTokebnIndex;
+                            list->add(paramDecl);
+                            return true;
+                        }
+                        case TokenType::op_equal:{
+                            _tokenIndex = nextJudgeTokebnIndex;
+                            _tokenIndex = getNextNotComment();
+                            auto defaultValue = parseExpression();
+                            paramDecl->setDefaultValue(defaultValue);
+                            nextJudgeTokebnIndex = getNextNotComment();
+                            switch (getTokenType(nextJudgeTokebnIndex)){
+                                case TokenType::comma:{
+                                    _tokenIndex = nextJudgeTokebnIndex;
+                                    list->add(paramDecl);
+                                    goto parseNext;
+                                }
+                                case TokenType::r_paren:{
+                                    _tokenIndex = nextJudgeTokebnIndex;
+                                    return true;
+                                }
+                                default:{
+                                    _diagnosticStream << DiagnosticBuilder::error(CompileError::RBraceExpected, _context->syntaxID)
+                                            .after(_tokenIndex)
+                                            .message("')' expected")
+                                            .build();
+                                    return false;
+                                }
+                            }
+                        }
+                        default:{
+                            _diagnosticStream << DiagnosticBuilder::error(CompileError::RParenExpected, _context->syntaxID)
+                                .after(_tokenIndex)
+                                .message("')' expected")
+                                .build();
+                            return false;
+                        }
+                    }
+                }
+            }
+            case TokenType::r_paren:{
+                _tokenIndex = nextJudgeTokebnIndex;
+                return true;
+            }
+            case TokenType::comma:{
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::IdentifierExpected, _context->syntaxID)
+                        .after(_tokenIndex)
+                        .message("identifier expected")
+                        .build();
+                _tokenIndex = nextJudgeTokebnIndex;
+                goto parseNext;
+            }
+            default:{
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::RBraceExpected, _context->syntaxID)
+                        .after(_tokenIndex)
+                        .message("')' expected")
+                        .build();
+                return false;
+            }
+        }
     }
 
     void Parser::splitCurrentMultiCharOperator() {
@@ -566,6 +688,7 @@ namespace yuuki::compiler::feasy{
             }
         }
         while (true){
+            parseNext:
             nextJudgeTokenIndex = getNextNotComment();
             nextType = getTokenType(nextJudgeTokenIndex);
             // we met the end of the expression
@@ -674,6 +797,7 @@ namespace yuuki::compiler::feasy{
                                 move(endTokens);
                         }
                         left = callExpr;
+                        goto parseNext;
                     } else{
                         _tokenIndex = tokenBeforeArgTest;
                         nextJudgeTokenIndex = getNextNotComment();

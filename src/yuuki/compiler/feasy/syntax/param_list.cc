@@ -4,7 +4,7 @@
 namespace yuuki::compiler::feasy::syntax{
 
 
-    ParamDeclaration::ParamDeclaration(const std::shared_ptr<Name> &name, const std::shared_ptr<Type> &type) {
+    ParamDeclaration::ParamDeclaration(const std::shared_ptr<Type> &type, const std::shared_ptr<Name> &name) {
         _name = name;
         _type = type;
         _defaultValue = nullptr;
@@ -12,7 +12,7 @@ namespace yuuki::compiler::feasy::syntax{
 
     void ParamDeclaration::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
         syntaxWalker(_name, false);
-        if(syntaxWalker == nullptr) {
+        if(_defaultValue == nullptr) {
             syntaxWalker(_type, true);
         } else{
             syntaxWalker(_type, false);
@@ -24,18 +24,18 @@ namespace yuuki::compiler::feasy::syntax{
         if (s.rdbuf() == std::cout.rdbuf()) {
             s << rang::fg::gray << "ParamDeclaration "
               << rang::fg::yellow << "<" << this << "> "
-              << rang::fg::cyan << "'" << _name->toString() << " " << _type->toString();
+              << rang::fg::cyan << "'" << _type->toString() << " " << _name->toString();
             if (_defaultValue != nullptr)
-                s << "= " << _defaultValue->toString();
+                s << " = " << _defaultValue->toString();
 
             s << "'"
               << rang::fg::reset << std::endl;
         } else {
             s << "ParamDeclaration "
               << "<" << this << "> "
-              << "'" << _name->toString() << " " << _type->toString();
+              << "'" << _type->toString() << " " << _name->toString();
             if (_defaultValue != nullptr)
-                s << "= " << _defaultValue->toString();
+                s << " = " << _defaultValue->toString();
             s << "'" << std::endl;
         }
     }
@@ -58,6 +58,16 @@ namespace yuuki::compiler::feasy::syntax{
 
     void ParamDeclaration::setDefaultValue(const std::shared_ptr<Expression> &defaultValue) {
         _defaultValue = defaultValue;
+    }
+
+    std::size_t ParamDeclaration::start() {
+        return _type->start();
+    }
+
+    std::size_t ParamDeclaration::end() {
+        if(_defaultValue!= nullptr)
+            return _defaultValue->end();
+        return _name->end();
     }
 
     void ParamList::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
@@ -87,5 +97,16 @@ namespace yuuki::compiler::feasy::syntax{
 
     void ParamList::add(const std::shared_ptr<ParamDeclaration> &param) {
         _params.push_back(param);
+    }
+    std::size_t ParamList::start() {
+        if(_params.empty())
+            return invalidTokenIndex;
+        return _params.front()->start();
+    }
+
+    std::size_t ParamList::end() {
+        if(_params.empty())
+            return invalidTokenIndex;
+        return _params.back()->end();
     }
 }

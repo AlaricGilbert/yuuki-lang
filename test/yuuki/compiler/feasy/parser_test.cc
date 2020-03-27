@@ -74,7 +74,12 @@ TEST(Parser,parseType){
 
 TEST(Parser,parseClassDecl){
     
-    auto code = "public naive class list<T>:i_enumerable<T>,i_gc_ignored";
+    auto code = R"(public naive class list<T>:i_enumerable<T>,i_gc_ignored{
+                       public static int[][] matrix;
+                       public static void main(string[] args){
+                           console.log("hello,world!");
+                       }
+                   })";
     auto sm = std::make_shared<SyntaxContextManager>();
     auto d = std::make_shared<DiagnosticStream>(sm);
     auto context = sm->create(code);
@@ -169,6 +174,23 @@ for(int i = 1;i < int32.max();i++){
         Parser p = Parser(context, d);
         l.lex();
         std::cout << *p.parseStatement();
+    }
+    std::cout << *d;
+}
+
+TEST(Parser,parseMethodDecl){
+    auto codes = {
+            "public pair<K,V> getResult<K,V>(int a = 1,int b){return make_pair<K,V>(1,2);}"
+    };
+    auto sm = std::make_shared<SyntaxContextManager>();
+    auto d = std::make_shared<DiagnosticStream>(sm);
+    for(auto& code:codes) {
+        auto context = sm->create(code);
+        context->codePath = "INTERNAL_TEST/parseMethodDecl.yuk";
+        Lexer l = Lexer(context, d);
+        Parser p = Parser(context, d);
+        l.lex();
+        std::cout << *p.parseMethodDeclaration();
     }
     std::cout << *d;
 }

@@ -470,7 +470,7 @@ namespace yuuki::compiler::feasy::syntax {
     }
 
     SyntaxType GenericCallExpression::getType() {
-        return SyntaxType::GenericArgumentList;
+        return SyntaxType::GenericCallExpression;
     }
 
     std::size_t GenericCallExpression::start() {
