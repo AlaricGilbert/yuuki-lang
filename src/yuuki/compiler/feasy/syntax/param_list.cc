@@ -8,6 +8,7 @@ namespace yuuki::compiler::feasy::syntax{
         _name = name;
         _type = type;
         _defaultValue = nullptr;
+        _equalIndex = invalidTokenIndex;
     }
 
     void ParamDeclaration::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
@@ -68,6 +69,18 @@ namespace yuuki::compiler::feasy::syntax{
         if(_defaultValue!= nullptr)
             return _defaultValue->end();
         return _name->end();
+    }
+
+    void ParamDeclaration::setEqualTokenIndex(std::size_t equalIndex) {
+        _equalIndex = equalIndex;
+    }
+
+    std::weak_ptr<Expression> ParamDeclaration::getDefaultValue() {
+        return _defaultValue;
+    }
+
+    std::size_t ParamDeclaration::getEqualIndex() {
+        return _equalIndex;
     }
 
     void ParamList::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {

@@ -10,6 +10,10 @@ namespace yuuki::compiler::feasy::syntax{
         explicit NamespaceDeclaration(std::size_t nsTokenIndex,const std::shared_ptr<Name>& nsName);
         void setLBraceTokenIndex(std::size_t lBraceTokenIndex);
         void setRBraceTokenIndex(std::size_t rBraceTokenIndex);
+        void forEachClass(const std::function<void (std::weak_ptr<ClassDeclaration>, bool)> &syntaxWalker);
+        std::shared_ptr<Name> getNamespaceName();
+        std::size_t getLBraceTokenIndex();
+        std::size_t getRBraceTokenIndex();
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream &ostream) override;
         bool hasChild() override;
@@ -20,10 +24,11 @@ namespace yuuki::compiler::feasy::syntax{
 
     private:
         std::shared_ptr<Name> _nsName;
-        std::vector<std::shared_ptr<SyntaxNode>> _children;
+        std::vector<std::shared_ptr<ClassDeclaration>> _children;
         std::size_t _nsTokenIndex;
         std::size_t _lBraceTokenIndex;
         std::size_t _rBraceTokenIndex;
+
     };
 
 

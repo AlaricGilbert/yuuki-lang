@@ -57,4 +57,24 @@ namespace yuuki::compiler::feasy::syntax{
     std::size_t NamespaceDeclaration::end() {
         return 0;
     }
+
+    std::shared_ptr<Name> NamespaceDeclaration::getNamespaceName() {
+        return _nsName;
+    }
+
+    std::size_t NamespaceDeclaration::getLBraceTokenIndex() {
+        return _lBraceTokenIndex;
+    }
+
+    std::size_t NamespaceDeclaration::getRBraceTokenIndex() {
+        return _rBraceTokenIndex;
+    }
+
+
+    void
+    NamespaceDeclaration::forEachClass(const std::function<void(std::weak_ptr<ClassDeclaration>, bool)> &syntaxWalker) {
+        for (std::size_t i = 0; i < _children.size(); ++i) {
+            syntaxWalker(_children[i], i == _children.size() - 1);
+        }
+    }
 }

@@ -88,4 +88,16 @@ namespace yuuki::compiler::feasy::syntax{
         return _right->end();
     }
 
+    std::shared_ptr<IdentifierName> QualifiedName::getLeft() {
+        return _left;
+    }
+
+    std::shared_ptr<Name> QualifiedName::getRight() {
+        return _right;
+    }
+
+    std::size_t QualifiedName::getPeriodTokId() {
+        return _periodTokId;
+    }
+
 }

@@ -22,15 +22,7 @@ namespace yuuki::compiler::feasy::syntax{
         }
     }
 
-    void SyntaxUnit::add(const std::shared_ptr<ImportDirective> &child) {
-        _syntax.push_back(child);
-    }
-
-    void SyntaxUnit::add(const std::shared_ptr<NamespaceDeclaration> &child) {
-        _syntax.push_back(child);
-    }
-
-    void SyntaxUnit::add(const std::shared_ptr<ClassDeclaration> &child) {
+    void SyntaxUnit::add(const std::shared_ptr<SyntaxNode> &child) {
         _syntax.push_back(child);
     }
 

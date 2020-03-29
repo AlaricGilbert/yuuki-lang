@@ -93,6 +93,18 @@ namespace yuuki::compiler::feasy::syntax{
         _rSquareIndex = rSquareIndex;
     }
 
+    std::shared_ptr<Type> ArrayType::getChildType() {
+        return _childType;
+    }
+
+    std::size_t ArrayType::getLSquareIndex() {
+        return _lSquareIndex;
+    }
+
+    std::size_t ArrayType::getRSquareIndex() {
+        return _rSquareIndex;
+    }
+
     void UnknownType::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
     }
 

@@ -13,7 +13,8 @@ namespace yuuki::compiler::feasy::syntax{
         ModifierMark,
         ModifierList,
 
-        VariableDeclarationList,
+        VariableDeclarationStatement,
+        GenericTypeList,
 
         BlockStatement,
         IfStatement,
@@ -34,7 +35,6 @@ namespace yuuki::compiler::feasy::syntax{
 
         NamespaceDeclaration,
         ClassDeclaration,
-        GenericDeclaration,
         GenericArgumentList,
         InheritDeclaration,
         MethodDeclaration,

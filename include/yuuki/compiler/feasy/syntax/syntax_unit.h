@@ -6,16 +6,12 @@
 
 namespace yuuki::compiler::feasy::syntax{
     class SyntaxUnit: public SyntaxNode,
-                      public ISyntaxList<ImportDirective>,
-                      public ISyntaxList<NamespaceDeclaration>,
-                      public ISyntaxList<ClassDeclaration>{
+                      public ISyntaxList<SyntaxNode>{
     public:
         SyntaxType getType() override;
         bool hasChild() override;
         void writeCurrentInfo(std::ostream &ostream) override;
-        void add(const std::shared_ptr<ImportDirective> &child) override;
-        void add(const std::shared_ptr<NamespaceDeclaration> &child) override;
-        void add(const std::shared_ptr<ClassDeclaration> &child) override;
+        void add(const std::shared_ptr<SyntaxNode> &child);
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         std::size_t start() override;
         std::size_t end() override;

@@ -50,10 +50,16 @@ namespace yuuki::compiler::feasy::syntax{
         std::size_t end() override;
         void setRSquareIndex(std::size_t rSquareIndex);
         std::string toString() override ;
-
+        std::shared_ptr<Type> getChildType();
+        std::size_t getLSquareIndex();
+        std::size_t getRSquareIndex();
     private:
         std::shared_ptr<Type> _childType;
         std::size_t _lSquareIndex;
+    public:
+
+
+    private:
         std::size_t _rSquareIndex;
     };
 }

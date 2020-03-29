@@ -55,4 +55,16 @@ namespace yuuki::compiler::feasy::syntax{
             return _left->toString() + token::TokenUtil::getSpell(_operatorType) + _right->toString();
         return _left->toString() + " " + token::TokenUtil::getSpell(_operatorType) + " " + _right->toString();
     }
+
+    std::shared_ptr<Expression> BinaryExpression::getLeft() {
+        return _left;
+    }
+
+    std::size_t BinaryExpression::getOpIndex() {
+        return _opIndex;
+    }
+
+    std::shared_ptr<Expression> BinaryExpression::getRight() {
+        return _right;
+    }
 }

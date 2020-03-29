@@ -41,6 +41,9 @@ namespace yuuki::compiler::feasy::syntax{
         std::size_t start() override ;
         std::size_t end() override;
         std::string toString() override;
+        std::shared_ptr<IdentifierName> getLeft();
+        std::shared_ptr<Name> getRight();
+        std::size_t getPeriodTokId();
     private:
         std::shared_ptr<IdentifierName> _left;
         std::shared_ptr<Name> _right;

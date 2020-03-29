@@ -33,6 +33,10 @@ namespace yuuki::compiler::feasy::syntax{
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void analyseType() override;
         std::string toString() override ;
+        std::size_t getLeftParenIndex();
+        std::size_t getRightParenIndex();
+        std::shared_ptr<Type> getTargetType();
+        std::shared_ptr<Expression> getOperand();
 
     private:
         std::size_t _leftParenIndex;
@@ -100,6 +104,10 @@ namespace yuuki::compiler::feasy::syntax{
         bool hasChild() override ;
         void analyseType() override ;
         std::string toString() override ;
+        std::shared_ptr<Expression> getIndexedExpr();
+        std::shared_ptr<Expression> getIndex();
+        size_t getLSquareIndex();
+        size_t getRSquareIndex();
 
     private:
         std::shared_ptr<Expression> _indexedExpr;
@@ -120,6 +128,8 @@ namespace yuuki::compiler::feasy::syntax{
         bool hasChild() override;
         void analyseType() override;
         std::string toString() override;
+        std::size_t getOpIndex();
+        std::shared_ptr<Expression> getOperand();
     private:
         token::TokenType _operatorType;
         std::size_t _opIndex;
@@ -131,6 +141,7 @@ namespace yuuki::compiler::feasy::syntax{
         explicit CallExpression(std::size_t lParenIndex, const std::shared_ptr<Expression> &method,
                                 std::size_t rParenIndex = invalidTokenIndex);
         void setRParenIndex(std::size_t rParenIndex);
+        void forEachArgument(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker);
         void add(const std::shared_ptr<Expression> &child) override;
         void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream &ostream) override;
@@ -140,6 +151,9 @@ namespace yuuki::compiler::feasy::syntax{
         bool hasChild() override;
         void analyseType() override;
         std::string toString() override;
+        std::shared_ptr<Expression> getMethod();
+        std::size_t getLParenIndex();
+        std::size_t getRParenIndex();
 
     private:
         std::shared_ptr<Expression> _method;
@@ -206,6 +220,8 @@ namespace yuuki::compiler::feasy::syntax{
         void setRParenIndex(std::size_t rParenIndex);
         void add(const std::shared_ptr<Expression> &child) override;
         void forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void forEachArgument(const std::function<void(std::weak_ptr<Expression>, bool)> &syntaxWalker);
+
         void writeCurrentInfo(std::ostream &ostream) override;
         SyntaxType getType() override;
         std::size_t start() override;
@@ -213,7 +229,10 @@ namespace yuuki::compiler::feasy::syntax{
         bool hasChild() override;
         void analyseType() override;
         std::string toString() override;
-
+        std::shared_ptr<Expression> getMethod();
+        std::shared_ptr<GenericTypeList> getGenericArgList();
+        std::size_t getLParenIndex();
+        std::size_t getRParenIndex();
     private:
         std::shared_ptr<Expression> _method;
         std::shared_ptr<GenericTypeList> _genericArgList;

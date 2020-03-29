@@ -1,159 +1,159 @@
 #include <yuuki/compiler/feasy/syntax/syntax_node.h>
 namespace yuuki::compiler::feasy::syntax{
-    std::ostream & operator<<(std::ostream& s,SyntaxType type){
-        switch (type){
+    std::ostream & operator<<(std::ostream& s,SyntaxType type) {
+        switch (type) {
             case SyntaxType::SyntaxUnit:
-                s<<"SyntaxUnit";
+                s << "SyntaxUnit";
                 break;
             case SyntaxType::ImportDirective:
-                s<<"ImportDirective";
+                s << "ImportDirective";
                 break;
             case SyntaxType::ModifierMark:
-                s<<"ModifierMark";
+                s << "ModifierMark";
                 break;
             case SyntaxType::ModifierList:
-                s<<"ModifierList";
+                s << "ModifierList";
                 break;
-            case SyntaxType::VariableDeclarationList:
-                s<<"VariableDeclarationStatement";
+            case SyntaxType::VariableDeclarationStatement:
+                s << "VariableDeclarationStatement";
+                break;
+            case SyntaxType::GenericTypeList:
+                s << "GenericTypeList";
                 break;
             case SyntaxType::BlockStatement:
-                s<<"BlockStatement";
+                s << "BlockStatement";
                 break;
             case SyntaxType::IfStatement:
-                s<<"IfStatement";
+                s << "IfStatement";
                 break;
             case SyntaxType::ForStatement:
-                s<<"ForStatement";
+                s << "ForStatement";
                 break;
             case SyntaxType::WhileStatement:
-                s<<"WhileStatement";
+                s << "WhileStatement";
                 break;
             case SyntaxType::DoWhileStatement:
-                s<<"DoWhileStatement";
+                s << "DoWhileStatement";
                 break;
             case SyntaxType::NopStatement:
-                s<<"NopStatement";
+                s << "NopStatement";
                 break;
             case SyntaxType::TryCatchStatement:
-                s<<"TryCatchStatement";
+                s << "TryCatchStatement";
                 break;
             case SyntaxType::SwitchStatement:
-                s<<"SwitchStatement";
+                s << "SwitchStatement";
                 break;
             case SyntaxType::CaseStatement:
-                s<<"CaseStatement";
+                s << "CaseStatement";
                 break;
             case SyntaxType::DefaultStatement:
-                s<<"DefaultStatement";
+                s << "DefaultStatement";
                 break;
             case SyntaxType::BreakStatement:
-                s<<"BreakStatement";
+                s << "BreakStatement";
                 break;
             case SyntaxType::ContinueStatement:
-                s<<"ContinueStatement";
+                s << "ContinueStatement";
                 break;
             case SyntaxType::ReturnStatement:
-                s<<"ReturnStatement";
+                s << "ReturnStatement";
                 break;
             case SyntaxType::GotoStatement:
-                s<<"GotoStatement";
+                s << "GotoStatement";
                 break;
             case SyntaxType::LabelStatement:
-                s<<"LabelStatement";
+                s << "LabelStatement";
                 break;
             case SyntaxType::NamespaceDeclaration:
-                s<<"NamespaceDeclaration";
+                s << "NamespaceDeclaration";
                 break;
             case SyntaxType::ClassDeclaration:
-                s<<"ClassDeclaration";
-                break;
-            case SyntaxType::GenericDeclaration:
-                s<<"GenericDeclaration";
+                s << "ClassDeclaration";
                 break;
             case SyntaxType::GenericArgumentList:
-                s<<"GenericArgumentList";
+                s << "GenericArgumentList";
                 break;
             case SyntaxType::InheritDeclaration:
-                s<<"InheritDeclaration";
+                s << "InheritDeclaration";
                 break;
             case SyntaxType::MethodDeclaration:
-                s<<"MethodDeclaration";
+                s << "MethodDeclaration";
                 break;
             case SyntaxType::FieldDeclaration:
-                s<<"FieldDeclaration";
+                s << "FieldDeclaration";
                 break;
             case SyntaxType::ParamDeclaration:
-                s<<"ParamDeclaration";
+                s << "ParamDeclaration";
                 break;
             case SyntaxType::ParamList:
-                s<<"ParamList";
+                s << "ParamList";
                 break;
             case SyntaxType::IdentifierName:
-                s<<"IdentifierName";
+                s << "IdentifierName";
                 break;
             case SyntaxType::QualifiedName:
-                s<<"QualifiedName";
+                s << "QualifiedName";
                 break;
             case SyntaxType::TrivialType:
-                s<<"TrivialType";
+                s << "TrivialType";
                 break;
             case SyntaxType::ArrayType:
-                s<<"ArrayType";
+                s << "ArrayType";
                 break;
             case SyntaxType::GenericType:
-                s<<"GenericType";
+                s << "GenericType";
                 break;
             case SyntaxType::UnknownType:
-                s<<"UnknownType";
+                s << "UnknownType";
                 break;
             case SyntaxType::BinaryExpression:
-                s<<"BinaryExpression";
+                s << "BinaryExpression";
                 break;
             case SyntaxType::ExplicitCastExpression:
-                s<<"ExplicitCastExpression";
+                s << "ExplicitCastExpression";
                 break;
             case SyntaxType::UnaryExpression:
-                s<<"UnaryExpression";
+                s << "UnaryExpression";
                 break;
             case SyntaxType::NameExpression:
-                s<<"NameExpression";
+                s << "NameExpression";
                 break;
             case SyntaxType::NullExpression:
-                s<<"NullExpression";
+                s << "NullExpression";
                 break;
             case SyntaxType::ThisExpression:
-                s<<"ThisExpression";
+                s << "ThisExpression";
                 break;
             case SyntaxType::StringLiteralExpression:
-                s<<"StringLiteralExpression";
+                s << "StringLiteralExpression";
                 break;
             case SyntaxType::NumericLiteralExpression:
-                s<<"NumericLiteralExpression";
+                s << "NumericLiteralExpression";
                 break;
             case SyntaxType::CallExpression:
-                s<<"CallExpression";
+                s << "CallExpression";
                 break;
             case SyntaxType::GenericCallExpression:
-                s<<"GenericCallExpression";
+                s << "GenericCallExpression";
                 break;
             case SyntaxType::IndexExpression:
-                s<<"IndexExpression";
+                s << "IndexExpression";
                 break;
             case SyntaxType::ParenthesesExpression:
-                s<<"ParenthesesExpression";
+                s << "ParenthesesExpression";
                 break;
             case SyntaxType::PostfixExpression:
-                s<<"PostfixExpression";
+                s << "PostfixExpression";
                 break;
             case SyntaxType::InlineComment:
-                s<<"InlineComment";
+                s << "InlineComment";
                 break;
             case SyntaxType::InterlineComment:
-                s<<"InterlineComment";
+                s << "InterlineComment";
                 break;
             default:
-                s<<"Unknown";
+                s << "Unknown";
                 break;
         }
         return s;

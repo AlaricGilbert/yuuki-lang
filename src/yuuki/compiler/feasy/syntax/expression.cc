@@ -49,6 +49,22 @@ namespace yuuki::compiler::feasy::syntax {
         _operand = operand;
     }
 
+    std::size_t ExplicitCastExpression::getLeftParenIndex() {
+        return _leftParenIndex;
+    }
+
+    std::size_t ExplicitCastExpression::getRightParenIndex() {
+        return _rightParenIndex;
+    }
+
+    std::shared_ptr<Type> ExplicitCastExpression::getTargetType() {
+        return _targetType;
+    }
+
+    std::shared_ptr<Expression> ExplicitCastExpression::getOperand() {
+        return _operand;
+    }
+
 
     NameExpression::NameExpression(const std::shared_ptr<Name> &name) {
         _name = name;
@@ -221,6 +237,22 @@ namespace yuuki::compiler::feasy::syntax {
         return _indexedExpr->toString() + "[" + _index->toString() + "]";
     }
 
+    std::shared_ptr<Expression> IndexExpression::getIndexedExpr() {
+        return _indexedExpr;
+    }
+
+    std::shared_ptr<Expression> IndexExpression::getIndex() {
+        return _index;
+    }
+
+    std::size_t IndexExpression::getLSquareIndex() {
+        return _lSquareIndex;
+    }
+
+    std::size_t IndexExpression::getRSquareIndex() {
+        return _rSquareIndex;
+    }
+
     PostfixExpression::PostfixExpression(token::TokenType operatorType, std::size_t opIndex,
                                          const std::shared_ptr<Expression> &operand) {
         _operatorType = operatorType;
@@ -264,6 +296,14 @@ namespace yuuki::compiler::feasy::syntax {
 
     std::string PostfixExpression::toString() {
         return _operand->toString() + token::TokenUtil::getSpell(_operatorType);
+    }
+
+    std::size_t PostfixExpression::getOpIndex() {
+        return _opIndex;
+    }
+
+    std::shared_ptr<Expression> PostfixExpression::getOperand() {
+        return _operand;
     }
 
     CallExpression::CallExpression(std::size_t lParenIndex,const std::shared_ptr<Expression>& method, std::size_t rParenIndex) {
@@ -329,6 +369,24 @@ namespace yuuki::compiler::feasy::syntax {
 
     void CallExpression::setRParenIndex(std::size_t rParenIndex) {
         _rParenIndex = rParenIndex;
+    }
+
+    std::shared_ptr<Expression> CallExpression::getMethod() {
+        return _method;
+    }
+
+    std::size_t CallExpression::getLParenIndex() {
+        return _lParenIndex;
+    }
+
+    std::size_t CallExpression::getRParenIndex() {
+        return _rParenIndex;
+    }
+
+    void CallExpression::forEachArgument(const std::function<void(std::weak_ptr<SyntaxNode>,bool)> &syntaxWalker) {
+        for (std::size_t i = 0; i < _arguments.size(); ++i) {
+            syntaxWalker(_arguments[i], i == _arguments.size() - 1);
+        }
     }
 
     ThisExpression::ThisExpression(std::size_t thisIndex) {
@@ -507,5 +565,27 @@ namespace yuuki::compiler::feasy::syntax {
                 result += ", ";
         }
         return result+")";
+    }
+
+    std::shared_ptr<Expression> GenericCallExpression::getMethod() {
+        return _method;
+    }
+
+    std::shared_ptr<GenericTypeList> GenericCallExpression::getGenericArgList() {
+        return _genericArgList;
+    }
+
+    std::size_t GenericCallExpression::getLParenIndex() {
+        return _lParenIndex;
+    }
+
+    std::size_t GenericCallExpression::getRParenIndex() {
+        return _rParenIndex;
+    }
+
+    void GenericCallExpression::forEachArgument(const std::function<void(std::weak_ptr<Expression>, bool)> &syntaxWalker) {
+        for (std::size_t i = 0; i < _arguments.size(); ++i) {
+            syntaxWalker(_arguments[i], i == _arguments.size() - 1);
+        }
     }
 }

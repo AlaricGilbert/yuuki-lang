@@ -28,7 +28,7 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     SyntaxType GenericTypeList::getType() {
-        return SyntaxType::GenericArgumentList;
+        return SyntaxType::GenericTypeList;
     }
 
     GenericTypeList::GenericTypeList(std::size_t startLessOp, std::size_t endGreaterOp) {

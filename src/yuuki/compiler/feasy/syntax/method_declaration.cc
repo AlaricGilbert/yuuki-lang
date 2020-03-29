@@ -104,4 +104,36 @@ namespace yuuki::compiler::feasy::syntax {
             return _genericInfos->end();
         return _name->end();
     }
+
+    std::shared_ptr<ModifierList> MethodDeclaration::getMod() {
+        return _mod;
+    }
+
+    std::shared_ptr<Type> MethodDeclaration::getReturnType() {
+        return _returnType;
+    }
+
+    std::shared_ptr<Name> MethodDeclaration::getName() {
+        return _name;
+    }
+
+    std::shared_ptr<GenericTypeList> MethodDeclaration::getGenericInfos() {
+        return _genericInfos;
+    }
+
+    std::shared_ptr<ParamList> MethodDeclaration::getParams() {
+        return _params;
+    }
+
+    std::shared_ptr<Statement> MethodDeclaration::getBody() {
+        return _body;
+    }
+
+    std::size_t MethodDeclaration::getLParenIndex() {
+        return _lParenIndex;
+    }
+
+    std::size_t MethodDeclaration::getRParenIndex() {
+        return _rParenIndex;
+    }
 }

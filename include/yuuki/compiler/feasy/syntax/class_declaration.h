@@ -25,6 +25,7 @@ namespace yuuki::compiler::feasy::syntax{
         void add(const std::shared_ptr<FieldDeclaration> &field) override ;
         void add(const std::shared_ptr<ClassDeclaration> &child) override ;
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
+        void forEachMember(const std::function<void (std::weak_ptr<SyntaxNode>)> &syntaxWalker);
         void writeCurrentInfo(std::ostream& ostream) override;
         bool hasChild() override ;
         std::size_t start() override;
@@ -33,11 +34,22 @@ namespace yuuki::compiler::feasy::syntax{
         void setClassTokenIndex(std::size_t classTokenIndex);
         void setLBraceIndex(std::size_t lBraceIndex);
         void setRBraceIndex(std::size_t rBraceIndex);
+        std::size_t getClassTokenIndex() const;
+        std::size_t getLBraceIndex() const;
+        std::size_t getRBraceIndex() const;
+        std::shared_ptr<ModifierList> getMod();
+        std::shared_ptr<Name> getName();
+        std::shared_ptr<InheritTypeList> getInheritInfos();
+        std::shared_ptr<GenericTypeList> getGenericInfos();
     private:
         std::size_t _classTokenIndex;
         std::size_t _lBraceIndex;
         std::size_t _rBraceIndex;
         std::shared_ptr<ModifierList> _mod;
+    public:
+
+
+    private:
         std::shared_ptr<Name> _name;
         std::shared_ptr<InheritTypeList> _inheritInfos;
         std::shared_ptr<GenericTypeList> _genericInfos;

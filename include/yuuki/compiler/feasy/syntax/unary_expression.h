@@ -16,6 +16,8 @@ namespace yuuki::compiler::feasy::syntax{
         bool hasChild() override;
         void analyseType() override;
         std::string toString() override;
+        std::size_t getOpIndex();
+        std::shared_ptr<Expression> getRight();
     private:
         token::TokenType _operatorType;
         std::size_t _opIndex;

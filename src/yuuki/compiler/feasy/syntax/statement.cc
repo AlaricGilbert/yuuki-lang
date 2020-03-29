@@ -705,7 +705,7 @@ namespace yuuki::compiler::feasy::syntax{
     }
 
     SyntaxType VariableDeclarationStatement::getType() {
-        return SyntaxType::VariableDeclarationList;
+        return SyntaxType::VariableDeclarationStatement;
     }
 
     bool VariableDeclarationStatement::hasChild() {

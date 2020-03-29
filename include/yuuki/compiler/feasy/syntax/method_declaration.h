@@ -23,6 +23,14 @@ namespace yuuki::compiler::feasy::syntax {
         SyntaxType getType() override ;
         std::size_t start() override;
         std::size_t end() override;
+        std::shared_ptr<ModifierList> getMod();
+        std::shared_ptr<Type> getReturnType();
+        std::shared_ptr<Name> getName();
+        std::shared_ptr<GenericTypeList> getGenericInfos();
+        std::shared_ptr<ParamList> getParams();
+        std::shared_ptr<Statement> getBody();
+        std::size_t getLParenIndex();
+        std::size_t getRParenIndex();
     private:
         std::shared_ptr<ModifierList> _mod;
         std::shared_ptr<Type> _returnType;

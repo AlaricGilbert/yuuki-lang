@@ -75,10 +75,14 @@ namespace yuuki::compiler::feasy::syntax {
     }
 
     std::size_t ModifierList::start() {
+        if(_marks.empty())
+            return invalidTokenIndex;
         return _marks.front()->start();
     }
 
     std::size_t ModifierList::end() {
+        if(_marks.empty())
+            return invalidTokenIndex;
         return _marks.back()->end();
     }
 }

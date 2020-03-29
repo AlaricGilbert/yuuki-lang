@@ -10,18 +10,22 @@ namespace yuuki::compiler::feasy::syntax{
     public:
         ParamDeclaration(const std::shared_ptr<Type>& type, const std::shared_ptr<Name> &name);
         void setDefaultValue(const std::shared_ptr<Expression>& defaultValue);
+        void setEqualTokenIndex(std::size_t equalIndex);
         void forEachChild(const std::function<void (std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) override;
         void writeCurrentInfo(std::ostream& ostream) override;
         SyntaxType getType() override ;
         bool hasChild() override ;
         std::weak_ptr<Name> getParamName();
         std::weak_ptr<Type> getParamType();
+        std::weak_ptr<Expression> getDefaultValue();
         std::size_t start() override;
         std::size_t end() override;
+        std::size_t getEqualIndex();
     private:
         std::shared_ptr<Name> _name;
         std::shared_ptr<Type> _type;
         std::shared_ptr<Expression> _defaultValue;
+        std::size_t _equalIndex;
     };
     class ParamList: public SyntaxNode, public ISyntaxList<ParamDeclaration>{
     public:

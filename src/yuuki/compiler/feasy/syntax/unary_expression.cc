@@ -50,4 +50,12 @@ namespace yuuki::compiler::feasy::syntax{
     std::string UnaryExpression::toString() {
         return token::TokenUtil::getSpell(_operatorType) + _right->toString();
     }
+
+    std::size_t UnaryExpression::getOpIndex() {
+        return _opIndex;
+    }
+
+    std::shared_ptr<Expression> UnaryExpression::getRight() {
+        return _right;
+    }
 }

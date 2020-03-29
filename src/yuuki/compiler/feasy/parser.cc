@@ -15,6 +15,7 @@ namespace yuuki::compiler::feasy{
     }
 
     void Parser::parse() {
+        // initialize the main syntax unit
         _context->syntaxTree = std::make_shared<SyntaxUnit>();
         // the recovery lambda for main parse section
         auto recover = [&]() -> void {
@@ -30,19 +31,26 @@ namespace yuuki::compiler::feasy{
                 TokenType::kw_class
             });
         };
+        // before we reached the end of the token buffer
         while (_tokenIndex < _context->tokens.size()){
             switch (getCurrentTokenType()){
                 // we are going to handle the main situations in the global syntax unit
                 case TokenType::kw_import:{
                     std::size_t importTokenIndex = _tokenIndex;
                     _tokenIndex = getNextNotComment();
+                    // import identifier.subidentifier ...
+                    //             ^
                     if(getCurrentTokenType() == TokenType::identifier){
                         auto importName = parseName();
+                        // import some.name ;
+                        //                  ^
                         if(getTokenType(getNextNotComment())==TokenType::semi){
                             _tokenIndex = getNextNotComment();
                             _context->syntaxTree->add(std::make_shared<ImportDirective>(importName,importTokenIndex,
                                     _tokenIndex));
                         } else{
+                            // import some.name <non-semi-token>
+                            //                 ^ semi expected
                             _context->syntaxTree->add(std::make_shared<ImportDirective>(importName,importTokenIndex));
                             _diagnosticStream << DiagnosticBuilder::error(CompileError::SemiExpected,_context->syntaxID)
                                 .after(importName->end())
@@ -50,6 +58,8 @@ namespace yuuki::compiler::feasy{
                                 .build();
                         }
                     } else{
+                        // import <non-identifier>
+                        //       ^ identifier expected.
                         _diagnosticStream << DiagnosticBuilder::error(CompileError::IdentifierExpected,_context->syntaxID)
                                 .after(_tokenIndex)
                                 .message("identifier expected")
@@ -87,8 +97,8 @@ namespace yuuki::compiler::feasy{
                                 default:
                                     // TODO: push unexpected tokens error
                                     move({
-#define MODIFIER(X) TokenType::kw_##X,
-#include <yuuki/compiler/feasy/token/tokens.inc>
+                                        #define MODIFIER(X) TokenType::kw_##X,
+                                        #include <yuuki/compiler/feasy/token/tokens.inc>
                                         TokenType::kw_class,TokenType::r_brace
                                     });
                                     goto parseNextNsMember;
@@ -113,63 +123,12 @@ namespace yuuki::compiler::feasy{
                     if(_context->tokens[_tokenIndex])
                     break;
                 }
-                case TokenType::identifier: {
-                    // we just can't decide what happened here, we should firstly parse the full name
-                    // since we may meet 'some.situation.like.this'
-                    auto firstIdIndex = _tokenIndex;
-                    auto name = parseName();
-
-                    // we are going to find out what situation should be:
-                    //      some.libs; -> import some.libs;
-                    //
-                    //      when next line is like import some.other.libs; or namespace some.ns{
-                    //
-                    //      some {     -> class some {
-                    //
-                    //      some.lib { -> namespace  {
-                    switch (_context->tokens[_tokenIndex]->type){
-                        case TokenType::semi: {
-                            // we met the first situation, think it's a import directive and push an error
-                            auto import = std::make_shared<ImportDirective>(std::move(name),
-                                                                            SyntaxNode::invalidTokenIndex,
-                                                                            _tokenIndex);
-                            _context->syntaxTree->add(import);
-                            _diagnosticStream << DiagnosticBuilder::
-                            error(CompileError::ImportExpected, _context->syntaxID)
-                                    .before(firstIdIndex)
-                                    .message("import keyword expected")
-                                    .suggestion("insert 'import' here")
-                                    .build();
-                            break;
-                        }
-                        case TokenType::l_brace:{
-                            // it's a start of a block
-                            if(name->getType() == SyntaxType::IdentifierName){
-                                // tend to think it's a class
-                                // TODO: make a class
-                            } else{
-                                // name is a Qualified name, must be a namespace.
-                                // TODO: make a namespace
-                            }
-
-                        }
-                        default:
-                            // unexpected situation
-                            recover();
-                            // TODO: push error 'UnexpectedTokens'
-                            break;
-                    }
-                    break;
-                }
                 // we are going to handle comments
                 case TokenType::inline_comment:
                 case TokenType::interline_comment:
-                    // just jump over the comments for now
-                // then the other special situations
+                    break;
                 case TokenType::semi:
-                    // we think a single semi is a null directive
-                    // which would not be constructed into parse tree
-                    _tokenIndex++;
+                    _context->syntaxTree->add(std::make_shared<NopStatement>(_tokenIndex));
                     break;
                 case TokenType::eof:
                     // ends the parsing when met the end of the token list
@@ -194,18 +153,19 @@ namespace yuuki::compiler::feasy{
         auto currName = parseIdentifier();
         // since call won't move over the identifier, we should move here
         auto nextJudgeTokenIndex = getNextNotComment();
-        if(getTokenType(getNextNotComment()) == TokenType::op_period){
+        if(getTokenType(nextJudgeTokenIndex) == TokenType::op_period){
             // record the current token index (the index BEFORE period)
             auto originalTokIndex = _tokenIndex;
-            // _tokenIndex is now set to
+            // _tokenIndex is now set to nextJudgeTokenIndex
             _tokenIndex = nextJudgeTokenIndex;
+            std::size_t periodTokenIndex = _tokenIndex;
             // move to next non-comment token position
             nextJudgeTokenIndex = getNextNotComment();
             if(getTokenType(nextJudgeTokenIndex) == TokenType::identifier) {
                 _tokenIndex = nextJudgeTokenIndex;
                 // continue to parse right part of name
                 auto rightName = parseName();
-                return std::make_shared<QualifiedName>(std::move(currName), _tokenIndex, rightName);
+                return std::make_shared<QualifiedName>(std::move(currName), periodTokenIndex, rightName);
             } else{
                 // since the next usable token is not a identifier, roll back.
                 _tokenIndex = originalTokIndex;
@@ -258,6 +218,7 @@ namespace yuuki::compiler::feasy{
             }
         }
         auto classDecl = std::make_shared<ClassDeclaration>(modifiers,name,genDecl,inheritDecl);
+        classDecl->setClassTokenIndex(classTokenIndex);
         auto errorHandle = [&]()->void{                       // we met a unexpected token, until we met one of:
             //
             // we should just jump over them and throw an error
@@ -279,8 +240,9 @@ namespace yuuki::compiler::feasy{
             _tokenIndex = getNextNotComment();
             std::size_t memberStart = _tokenIndex;
             skipOverAModifierList();
-            if(getCurrentTokenType()==TokenType::modifiers)
+            if(_context->tokens[_tokenIndex]->is(TokenType::modifiers))
                 _tokenIndex = getNextNotComment();
+            auto p = getCurrentTokenType();
             switch (getCurrentTokenType())
             {
                 case TokenType::kw_class:
@@ -455,9 +417,16 @@ namespace yuuki::compiler::feasy{
         }
         if(getTokenType(nextJudgeTokenIndex)==TokenType::l_paren){
             _tokenIndex = nextJudgeTokenIndex;
+            lParenIndex = _tokenIndex;
             fillParamList(params);
-            if(getCurrentTokenType()!=TokenType::r_paren)
+            if(getCurrentTokenType()!=TokenType::r_paren){
+                _diagnosticStream << DiagnosticBuilder::error(CompileError::RParenExpected,_context->syntaxID)
+                        .after(params->hasChild()?params->end():lParenIndex)
+                        .message("')' expected")
+                        .build();
                 goto form_result;
+            }
+            rParenIndex = _tokenIndex;
             nextJudgeTokenIndex = getNextNotComment();
         } else{
             _diagnosticStream << DiagnosticBuilder::error(CompileError::LParenExpected,_context->syntaxID)
@@ -592,6 +561,7 @@ namespace yuuki::compiler::feasy{
                         }
                         case TokenType::op_equal:{
                             _tokenIndex = nextJudgeTokebnIndex;
+                            paramDecl->setEqualTokenIndex(_tokenIndex);
                             _tokenIndex = getNextNotComment();
                             auto defaultValue = parseExpression();
                             paramDecl->setDefaultValue(defaultValue);
@@ -821,7 +791,9 @@ namespace yuuki::compiler::feasy{
                         callExpr->setRParenIndex(_tokenIndex);
                     }
                     left = callExpr;
-                    break;
+                    nextJudgeTokenIndex = getNextNotComment();
+                    nextType = getTokenType(nextJudgeTokenIndex);
+                    goto parsePrimary;
                 }
                 default:
                     break;

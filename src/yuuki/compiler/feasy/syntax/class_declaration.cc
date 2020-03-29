@@ -115,4 +115,38 @@ namespace yuuki::compiler::feasy::syntax{
         _rBraceIndex = rBraceIndex;
     }
 
+    void ClassDeclaration::forEachMember(const std::function<void (std::weak_ptr<SyntaxNode>)> &syntaxWalker) {
+        for (const auto & _member : _members) {
+            syntaxWalker(_member);
+        }
+    }
+
+    std::size_t ClassDeclaration::getClassTokenIndex() const {
+        return _classTokenIndex;
+    }
+
+    std::size_t ClassDeclaration::getLBraceIndex() const {
+        return _lBraceIndex;
+    }
+
+    std::size_t ClassDeclaration::getRBraceIndex() const {
+        return _rBraceIndex;
+    }
+
+    std::shared_ptr<ModifierList>ClassDeclaration::getMod() {
+        return _mod;
+    }
+
+    std::shared_ptr<Name> ClassDeclaration::getName() {
+        return _name;
+    }
+
+    std::shared_ptr<InheritTypeList> ClassDeclaration::getInheritInfos() {
+        return _inheritInfos;
+    }
+
+    std::shared_ptr<GenericTypeList> ClassDeclaration::getGenericInfos() {
+        return _genericInfos;
+    }
+
 }
