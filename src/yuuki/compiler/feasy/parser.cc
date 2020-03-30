@@ -435,8 +435,10 @@ namespace yuuki::compiler::feasy{
                 .build();
             goto form_result;
         }
-        if(getTokenType(nextJudgeTokenIndex) == TokenType::semi)
+        if(getTokenType(nextJudgeTokenIndex) == TokenType::semi) {
             body = std::make_shared<NopStatement>(nextJudgeTokenIndex);
+            _tokenIndex = nextJudgeTokenIndex;
+        }
         else if(getTokenType(nextJudgeTokenIndex) == TokenType::l_brace){
             _tokenIndex = nextJudgeTokenIndex;
             body = parseBlockStatement();
@@ -574,6 +576,7 @@ namespace yuuki::compiler::feasy{
                                 }
                                 case TokenType::r_paren:{
                                     _tokenIndex = nextJudgeTokebnIndex;
+                                    list->add(paramDecl);
                                     return true;
                                 }
                                 default:{
@@ -1042,41 +1045,57 @@ namespace yuuki::compiler::feasy{
     }
 
     std::shared_ptr<IfStatement> Parser::parseIfStatement() {
-        auto ifTokenId = _tokenIndex;
+        std::size_t ifTokenIndex = _tokenIndex;
+        std::size_t elseTokenIndex = SyntaxNode::invalidTokenIndex;
+        std::size_t lParenIndex = SyntaxNode::invalidTokenIndex;
+        std::size_t rParenIndex = SyntaxNode::invalidTokenIndex;
+
         _tokenIndex = getNextNotComment();
         if(getCurrentTokenType()!=TokenType::l_paren){
             _diagnosticStream << DiagnosticBuilder::error(CompileError::UnexpectedToken,_context->syntaxID)
-                .after(ifTokenId)
+                .after(ifTokenIndex)
                 .message("'(' expected")
                 .suggestion(std::string("but found") + TokenUtil::getSpell(getCurrentTokenType()))
                 .build();
         } else{
+            lParenIndex = _tokenIndex;
             _tokenIndex = getNextNotComment();
         }
+
         auto condition = parseExpression({TokenType::r_paren,TokenType ::l_brace});
         _tokenIndex = getNextNotComment();
         if(getCurrentTokenType()!=TokenType::r_paren){
             _diagnosticStream << DiagnosticBuilder::error(CompileError::UnexpectedToken,_context->syntaxID)
-                    .after(ifTokenId)
+                    .after(ifTokenIndex)
                     .message("')' expected")
                     .suggestion(std::string("but found") + TokenUtil::getSpell(getCurrentTokenType()))
                     .build();
         } else{
+            rParenIndex = _tokenIndex;
             _tokenIndex = getNextNotComment();
         }
         auto ifClause = parseStatement();
         _tokenIndex = getNextNotComment();
+        std::shared_ptr<IfStatement> ifStmt;
         if(getCurrentTokenType() == TokenType::kw_else){
+            elseTokenIndex = _tokenIndex;
             _tokenIndex = getNextNotComment();
             auto elseClause = parseStatement();
-            return std::make_shared<IfStatement>(ifTokenId,condition,ifClause,elseClause);
-        };
-        _tokenIndex = ifClause->end();
-        return std::make_shared<IfStatement>(ifTokenId,condition,ifClause);
+            ifStmt = std::make_shared<IfStatement>(ifTokenIndex, condition, ifClause, elseClause);
+        } else{
+            _tokenIndex = ifClause->end();
+            ifStmt = std::make_shared<IfStatement>(ifTokenIndex, condition, ifClause);
+        }
+        ifStmt->setLParenIndex(lParenIndex);
+        ifStmt->setRParenIndex(rParenIndex);
+        ifStmt->setElseTokenIndex(elseTokenIndex);
+        return ifStmt;
     }
 
     std::shared_ptr<WhileStatement> Parser::parseWhileStatement() {
-        auto whileTokenId = _tokenIndex;
+        std::size_t whileTokenId = _tokenIndex;
+        std::size_t lParenTokenIndex = SyntaxNode::invalidTokenIndex;
+        std::size_t rParenTokenIndex = SyntaxNode::invalidTokenIndex;
         _tokenIndex = getNextNotComment();
         if(getCurrentTokenType()!=TokenType::l_paren){
             _diagnosticStream << DiagnosticBuilder::error(CompileError::UnexpectedToken,_context->syntaxID)
@@ -1085,6 +1104,7 @@ namespace yuuki::compiler::feasy{
                     .suggestion(std::string("but found") + TokenUtil::getSpell(getCurrentTokenType()))
                     .build();
         } else{
+            lParenTokenIndex = _tokenIndex;
             _tokenIndex = getNextNotComment();
         }
         auto condition = parseExpression({TokenType::r_paren,TokenType ::l_brace});
@@ -1096,9 +1116,13 @@ namespace yuuki::compiler::feasy{
                     .suggestion(std::string("but found") + TokenUtil::getSpell(getCurrentTokenType()))
                     .build();
         } else{
+            rParenTokenIndex = _tokenIndex;
             _tokenIndex = getNextNotComment();
         }
-        return std::make_shared<WhileStatement>(whileTokenId,condition,parseStatement());
+        auto whileStmt = std::make_shared<WhileStatement>(whileTokenId,condition,parseStatement());
+        whileStmt->setLParenIndex(lParenTokenIndex);
+        whileStmt->setRParenIndex(rParenTokenIndex);
+        return whileStmt;
     }
 
     std::shared_ptr<ContinueStatement> Parser::parseContinueStatement() {
@@ -1241,42 +1265,42 @@ namespace yuuki::compiler::feasy{
 
     std::shared_ptr<SwitchStatement> Parser::parseSwitchStatement(){
         std::size_t switchTokenIndex = _tokenIndex;
+        std::size_t lParenTokenIndex = SyntaxNode::invalidTokenIndex;
+        std::size_t rParenTokenIndex = SyntaxNode::invalidTokenIndex;
         _tokenIndex = getNextNotComment();
-        auto value = parseExpression();
-        if(value == nullptr){
-            _diagnosticStream << DiagnosticBuilder::error(CompileError::LParenExpected,_context->syntaxID)
-                .after(switchTokenIndex)
-                .message("'(' expected after 'switch'")
-                .build();
-            return std::make_shared<SwitchStatement>(switchTokenIndex);
-        }
-        _tokenIndex = getNextNotComment();
-        if(getTokenType(value->start())!=TokenType::l_paren){
-            _diagnosticStream << DiagnosticBuilder::error(CompileError::LParenExpected,_context->syntaxID)
-                    .before(value->start())
-                    .message("'(' expected after 'switch'")
+        if(getCurrentTokenType()!=TokenType::l_paren){
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::UnexpectedToken,_context->syntaxID)
+                    .after(switchTokenIndex)
+                    .message("'(' expected")
+                    .suggestion(std::string("but found") + TokenUtil::getSpell(getCurrentTokenType()))
                     .build();
-            if(getCurrentTokenType()!=TokenType::r_paren){
-                _diagnosticStream << DiagnosticBuilder::error(CompileError::RParenExpected,_context->syntaxID)
-                        .before(value->start())
-                        .message("')' expected")
-                        .build();
-            } else{
-                _tokenIndex = getNextNotComment();
-            }
+        } else{
+            lParenTokenIndex = _tokenIndex;
+            _tokenIndex = getNextNotComment();
         }
-        if(getCurrentTokenType()==TokenType::l_brace){
-            return std::make_shared<SwitchStatement>(switchTokenIndex,value,parseBlockStatement());
+        auto condition = parseExpression({TokenType::r_paren,TokenType ::l_brace});
+        _tokenIndex = getNextNotComment();
+        if(getCurrentTokenType()!=TokenType::r_paren){
+            _diagnosticStream << DiagnosticBuilder::error(CompileError::UnexpectedToken,_context->syntaxID)
+                    .after(switchTokenIndex)
+                    .message("')' expected")
+                    .suggestion(std::string("but found") + TokenUtil::getSpell(getCurrentTokenType()))
+                    .build();
+        } else{
+            rParenTokenIndex = _tokenIndex;
+            _tokenIndex = getNextNotComment();
         }
-        _diagnosticStream << DiagnosticBuilder::error(CompileError::LBraceExpected,_context->syntaxID)
-                .after(_tokenIndex)
-                .message("'{' expected")
-                .build();
-        return std::make_shared<SwitchStatement>(switchTokenIndex,value);
+        auto switchStmt = std::make_shared<SwitchStatement>(switchTokenIndex,condition,parseBlockStatement());
+        switchStmt->setLParenIndex(lParenTokenIndex);
+        switchStmt->setRParenIndex(rParenTokenIndex);
+        return switchStmt;
     }
 
     std::shared_ptr<ForStatement> Parser::parseForStatement() {
         std::size_t forTokenIndex = _tokenIndex;
+        std::size_t lParenIndex = SyntaxNode::invalidTokenIndex;
+        std::size_t rParenIndex = SyntaxNode::invalidTokenIndex;
+        std::size_t conditionEndSemiIndex = SyntaxNode::invalidTokenIndex;
         _tokenIndex = getNextNotComment();
         if(getCurrentTokenType() != TokenType::l_paren){
             _diagnosticStream << DiagnosticBuilder::error(CompileError::LParenExpected,_context->syntaxID)
@@ -1285,6 +1309,7 @@ namespace yuuki::compiler::feasy{
                     .build();
             _tokenIndex = forTokenIndex;
         } else{
+            lParenIndex = _tokenIndex;
             _tokenIndex = getNextNotComment();
         }
         std::size_t stmtStartTokenIndex = _tokenIndex;
@@ -1318,6 +1343,7 @@ namespace yuuki::compiler::feasy{
             _tokenIndex = init->end();
             goto formResult;
         } else{
+            conditionEndSemiIndex = _tokenIndex;
             _tokenIndex = getNextNotComment();
         }
 
@@ -1346,12 +1372,17 @@ namespace yuuki::compiler::feasy{
             goto formResult;
 
         } else{
+            rParenIndex = _tokenIndex;
             _tokenIndex = getNextNotComment();
         }
 
         body = parseStatement();
         formResult:
-        return std::make_shared<ForStatement>(forTokenIndex,init,condition,post,body);
+        auto forStmt = std::make_shared<ForStatement>(forTokenIndex,init,condition,post,body);
+        forStmt->setLParenIndex(lParenIndex);
+        forStmt->setRParenIndex(lParenIndex);
+        forStmt->setConditionEndSemiIndex(lParenIndex);
+        return forStmt;
     }
 
     std::shared_ptr<FieldDeclaration> Parser::parseFieldDeclaration() {

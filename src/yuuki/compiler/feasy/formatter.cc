@@ -13,9 +13,8 @@ namespace yuuki::compiler::feasy {
     }
 
     void Formatter::writeNode(const std::shared_ptr<syntax::SyntaxNode> &node, std::size_t indent) {
-//        while (_tokenIndex < node->start()) {
-//            writeCurrentTokenAsComment(indent);
-//        }
+        if(node == nullptr)
+            return;
         if (node->start() == syntax::SyntaxNode::invalidTokenIndex)
             return;
         switch (node->getType()) {
@@ -26,9 +25,14 @@ namespace yuuki::compiler::feasy {
             case syntax::SyntaxType::TrivialType:
             case syntax::SyntaxType::ModifierList:
             case syntax::SyntaxType::ParamList:
+                node->forEachChild([&](auto name, auto end) -> auto {
+                    writeNode(name.lock(), indent);
+                });
+                break;
             case syntax::SyntaxType::SyntaxUnit:
                 node->forEachChild([&](auto name, auto end) -> auto {
                     writeNode(name.lock(), indent);
+                    _codeBuffer << std::endl;
                 });
                 break;
             case syntax::SyntaxType::ImportDirective:
@@ -40,7 +44,7 @@ namespace yuuki::compiler::feasy {
                 while (_tokenIndex < node->end()) {
                     writeCurrentTokenAsComment(indent);
                 }
-                _codeBuffer << ";" << std::endl;
+                _codeBuffer << ";";
                 _tokenIndex++;
                 break;
             case syntax::SyntaxType::ModifierMark:
@@ -53,13 +57,129 @@ namespace yuuki::compiler::feasy {
                     writeNode(name.lock(), indent);
                 });
                 break;
-            case syntax::SyntaxType::IfStatement:
-            case syntax::SyntaxType::ForStatement:
-            case syntax::SyntaxType::WhileStatement:
+            case syntax::SyntaxType::IfStatement:{
+                auto ifStmt = std::static_pointer_cast<syntax::IfStatement>(node);
+                while (_tokenIndex < ifStmt->getIfTokenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << _context->tokens[_tokenIndex]->rawCode << " ";
+                _tokenIndex++;
+                while (_tokenIndex <ifStmt->getLParenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << "(";
+                _tokenIndex++;
+                writeNode(ifStmt->getCondition(), indent);
+                while (_tokenIndex <ifStmt->getRParenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << ")";
+                _tokenIndex++;
+                writeNode(ifStmt->getIf(),indent);
+                if(ifStmt->getElseTokenIndex() != syntax::SyntaxNode::invalidTokenIndex){
+                    _codeBuffer << " ";
+                    while (_tokenIndex <ifStmt->getElseTokenIndex()){
+                        writeCurrentTokenAsComment(indent);
+                    }
+                    _codeBuffer << "else ";
+                    _tokenIndex++;
+                    writeNode(ifStmt->getElse(), indent);
+                }
+                return;
+            }
+            case syntax::SyntaxType::WhileStatement:{
+                auto whileStmt = std::static_pointer_cast<syntax::WhileStatement>(node);
+                while (_tokenIndex <whileStmt->getWhileTokenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << _context->tokens[_tokenIndex]->rawCode << " ";
+                _tokenIndex++;
+                while (_tokenIndex <whileStmt->getLParenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << "(";
+                _tokenIndex++;
+                writeNode(whileStmt->getCondition(), indent);
+                while (_tokenIndex <whileStmt->getRParenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << ")";
+                _tokenIndex++;
+                writeNode(whileStmt->getBody(),indent);
+
+                return;
+            }
+            case syntax::SyntaxType::SwitchStatement:{
+                auto switchStmt = std::static_pointer_cast<syntax::SwitchStatement>(node);
+                while (_tokenIndex <switchStmt->getSwitchTokenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << _context->tokens[_tokenIndex]->rawCode << " ";
+                _tokenIndex++;
+                while (_tokenIndex <switchStmt->getLParenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << "(";
+                _tokenIndex++;
+                writeNode(switchStmt->getValue(), indent);
+                while (_tokenIndex <switchStmt->getRParenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << ")";
+                _tokenIndex++;
+                writeNode(switchStmt->getCases(), indent);
+
+                return;
+            }
+            case syntax::SyntaxType::CaseStatement:{
+                auto caseStmt = std::static_pointer_cast<syntax::CaseStatement>(node);
+                while (_tokenIndex <caseStmt->getCaseTokenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << "case ";
+                _tokenIndex++;
+                writeNode(caseStmt->getValue(), indent);
+                while (_tokenIndex <caseStmt->getColonTokenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << ": ";
+                _tokenIndex++;
+                writeNode(caseStmt->getCaseBlock(), indent);
+                return;
+            }
+            case syntax::SyntaxType::ForStatement:{
+                auto forStmt = std::static_pointer_cast<syntax::ForStatement>(node);
+                while (_tokenIndex < forStmt->getForTokenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << "for ";
+                _tokenIndex++;
+                while (_tokenIndex < forStmt->getLParenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << "(";
+                _tokenIndex++;
+                writeNode(forStmt->getInit(), indent);
+                writeNode(forStmt->getCondition(), indent);
+                while (_tokenIndex < forStmt->getConditionEndSemiIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << ";";
+                _tokenIndex++;
+                writeNode(forStmt->getPost(), indent);
+                while (_tokenIndex < forStmt->getRParenIndex()){
+                    writeCurrentTokenAsComment(indent);
+                }
+                _codeBuffer << ")";
+                _tokenIndex++;
+                writeNode(forStmt->getBody(), indent);
+                return;
+            }
             case syntax::SyntaxType::DoWhileStatement:
             case syntax::SyntaxType::TryCatchStatement:
-            case syntax::SyntaxType::SwitchStatement:
-            case syntax::SyntaxType::CaseStatement:
+                while (_tokenIndex < node->start()) {
+                    writeCurrentTokenAsComment(indent);
+                }
                 _codeBuffer << _context->tokens[_tokenIndex]->rawCode << " ";
                 _tokenIndex++;
                 node->forEachChild([&](auto name, auto end) -> auto {
@@ -74,7 +194,7 @@ namespace yuuki::compiler::feasy {
                 while (_tokenIndex < node->end()) {
                     writeCurrentTokenAsComment(indent);
                 }
-                _codeBuffer << ";" << std::endl;
+                _codeBuffer << ";";
                 _tokenIndex++;
                 break;
 
@@ -83,7 +203,7 @@ namespace yuuki::compiler::feasy {
             case syntax::SyntaxType::GotoStatement:
             case syntax::SyntaxType::BreakStatement:
             case syntax::SyntaxType::ContinueStatement:
-                _codeBuffer << _context->tokens[_tokenIndex]->rawCode;
+                _codeBuffer << _context->tokens[_tokenIndex]->rawCode <<" ";
                 _tokenIndex++;
                 node->forEachChild([&](auto name, auto end) -> auto {
                     writeNode(name.lock(), indent + 4);
@@ -91,7 +211,7 @@ namespace yuuki::compiler::feasy {
                 while (_tokenIndex < node->end()) {
                     writeCurrentTokenAsComment(indent);
                 }
-                _codeBuffer << ";" << std::endl;
+                _codeBuffer << ";";
                 _tokenIndex++;
                 break;
             case syntax::SyntaxType::BlockStatement:
@@ -101,19 +221,20 @@ namespace yuuki::compiler::feasy {
 
                     writeIndent(indent + 4);
                     writeNode(name.lock(), indent + 4);
+                    _codeBuffer << std::endl;
                 });
                 writeIndent(indent);
                 while (_tokenIndex < node->end()) {
                     writeCurrentTokenAsComment(indent);
                 }
-                _codeBuffer << "}" << std::endl;
+                _codeBuffer << "}";
                 _tokenIndex++;
                 break;
             case syntax::SyntaxType::NopStatement:
                 while (_tokenIndex < node->end()) {
                     writeCurrentTokenAsComment(indent);
                 }
-                _codeBuffer << ";" << std::endl;
+                _codeBuffer << ";";
                 _tokenIndex++;
                 break;
             case syntax::SyntaxType::DefaultStatement:
@@ -134,10 +255,13 @@ namespace yuuki::compiler::feasy {
                 while (_tokenIndex < node->end()) {
                     writeCurrentTokenAsComment(indent);
                 }
-                _codeBuffer << ":" << std::endl;
+                _codeBuffer << ":";
                 return;
-            case syntax::SyntaxType::VariableDeclarationStatement:
-                node->forEachChild([&](auto name, auto end) -> auto {
+            case syntax::SyntaxType::VariableDeclarationStatement: {
+                auto varDecl = std::static_pointer_cast<syntax::VariableDeclarationStatement>(node);
+                writeNode(varDecl->getVariableType(), indent);
+                _codeBuffer << " ";
+                varDecl->forEachVarDecl([&](auto name, auto end) -> auto {
                     writeNode(name.lock(), indent);
                     if (!end) {
                         _codeBuffer << ", ";
@@ -147,7 +271,10 @@ namespace yuuki::compiler::feasy {
                 while (_tokenIndex < node->end()) {
                     writeCurrentTokenAsComment(indent);
                 }
+                _codeBuffer << ";";
+                _tokenIndex++;
                 break;
+            }
             case syntax::SyntaxType::GenericTypeList:
             case syntax::SyntaxType::GenericArgumentList:
 
@@ -186,7 +313,6 @@ namespace yuuki::compiler::feasy {
                 node->forEachChild([&](auto name, auto end) -> auto {
                     writeNode(name.lock(), indent + 4);
                 });
-                writeIndent(indent);
                 while (_tokenIndex < node->end()) {
                     writeCurrentTokenAsComment(indent);
                 }
@@ -212,7 +338,8 @@ namespace yuuki::compiler::feasy {
 
                 nsNode->forEachClass([&](auto child, auto end) -> auto {
                     writeIndent(indent + 4);
-                    writeNode(child.lock(), indent + 4); //
+                    writeNode(child.lock(), indent + 4);
+                    _codeBuffer << std::endl;
                 });
 
                 while (_tokenIndex < nsNode->getRBraceTokenIndex()) {
@@ -220,7 +347,7 @@ namespace yuuki::compiler::feasy {
                 }
 
                 writeIndent(indent);
-                _codeBuffer << "}" << std::endl;
+                _codeBuffer << "}";
                 _tokenIndex++;
                 break;
             }
@@ -246,13 +373,14 @@ namespace yuuki::compiler::feasy {
                 classDecl->forEachMember([&](auto member) -> auto {
                     writeIndent(indent + 4); //
                     writeNode(member.lock(), indent + 4);
+                    _codeBuffer << std::endl;
                 });
 
                 while (_tokenIndex < classDecl->getRBraceIndex()) {
                     writeCurrentTokenAsComment(indent);
                 }
                 writeIndent(indent);
-                _codeBuffer << "}"<<std::endl;
+                _codeBuffer << "}";
                 _tokenIndex++;
                 break;
             }

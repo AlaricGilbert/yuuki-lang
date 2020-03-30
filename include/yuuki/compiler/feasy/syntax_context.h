@@ -1,7 +1,7 @@
 #ifndef YUUKI_SYNTAX_CONTEXT_H
 #define YUUKI_SYNTAX_CONTEXT_H
 
-#include <yuuki/compiler/feasy/code_postion.h>
+#include <yuuki/compiler/feasy/code_position.h>
 #include <yuuki/compiler/feasy/token/token.h>
 #include <yuuki/compiler/feasy/syntax/syntax_unit.h>
 #include <string_view>

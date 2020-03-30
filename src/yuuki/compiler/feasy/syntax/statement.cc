@@ -9,6 +9,9 @@ namespace yuuki::compiler::feasy::syntax{
         _else = elseClause;
         _condition = condition;
         _ifTokenIndex = ifTokenIndex;
+        _elseTokenIndex = invalidTokenIndex;
+        _lParenIndex = invalidTokenIndex;
+        _rParenIndex = invalidTokenIndex;
     }
 
     void IfStatement::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
@@ -55,6 +58,46 @@ namespace yuuki::compiler::feasy::syntax{
         return _if ->end();
     }
 
+    std::size_t IfStatement::getIfTokenIndex() {
+        return _ifTokenIndex;
+    }
+
+    std::size_t IfStatement::getLParenIndex() {
+        return _lParenIndex;
+    }
+
+    std::size_t IfStatement::getRParenIndex() {
+        return _rParenIndex;
+    }
+
+    void IfStatement::setLParenIndex(std::size_t lParenIndex) {
+        _lParenIndex = lParenIndex;
+    }
+
+    void IfStatement::setRParenIndex(std::size_t rParenIndex) {
+        _rParenIndex = rParenIndex;
+    }
+
+    std::shared_ptr<Statement> IfStatement::getIf() {
+        return _if;
+    }
+
+    std::shared_ptr<Statement> IfStatement::getElse() {
+        return _else;
+    }
+
+    std::shared_ptr<Expression> IfStatement::getCondition() {
+        return _condition;
+    }
+
+    size_t IfStatement::getElseTokenIndex() const {
+        return _elseTokenIndex;
+    }
+
+    void IfStatement::setElseTokenIndex(size_t elseTokenIndex) {
+        _elseTokenIndex = elseTokenIndex;
+    }
+
     ForStatement::ForStatement(std::size_t forTokenIndex,
                                const std::shared_ptr<Statement>& init,
                                const std::shared_ptr<Expression>& condition,
@@ -64,7 +107,7 @@ namespace yuuki::compiler::feasy::syntax{
         _init = init;
         _post = post;
         _condition = condition;
-        _body = body; 
+        _body = body;
     }
 
     void ForStatement::forEachChild(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
@@ -117,6 +160,50 @@ namespace yuuki::compiler::feasy::syntax{
         return _forTokenIndex;
     }
 
+    std::size_t ForStatement::getForTokenIndex() {
+        return _forTokenIndex;
+    }
+
+    std::size_t ForStatement::getLParenIndex() {
+        return _lParenIndex;
+    }
+
+    std::size_t ForStatement::getRParenIndex() {
+        return _rParenIndex;
+    }
+
+    std::size_t ForStatement::getConditionEndSemiIndex() {
+        return _conditionEndSemiIndex;
+    }
+
+    std::shared_ptr<Statement>  ForStatement::getInit() {
+        return _init;
+    }
+
+    std::shared_ptr<Expression> ForStatement::getCondition() {
+        return _condition;
+    }
+
+    std::shared_ptr<Expression> ForStatement::getPost() {
+        return _post;
+    }
+
+    std::shared_ptr<Statement> ForStatement::getBody() {
+        return _body;
+    }
+
+    void ForStatement::setLParenIndex(std::size_t lParenIndex) {
+        _lParenIndex = lParenIndex;
+    }
+
+    void ForStatement::setRParenIndex(std::size_t rParenIndex) {
+        _rParenIndex = rParenIndex;
+    }
+
+    void ForStatement::setConditionEndSemiIndex(std::size_t conditionEndSemiIndex) {
+        _conditionEndSemiIndex = conditionEndSemiIndex;
+    }
+
     WhileStatement::WhileStatement(std::size_t whileTokenIndex,
                              const std::shared_ptr<Expression>& condition, 
                              const std::shared_ptr<Statement>& body){
@@ -160,6 +247,34 @@ namespace yuuki::compiler::feasy::syntax{
 
     std::size_t WhileStatement::end() {
         return _body->end();
+    }
+
+    std::size_t WhileStatement::getWhileTokenIndex() {
+        return _whileTokenIndex;
+    }
+
+    std::shared_ptr<Expression> WhileStatement::getCondition() {
+        return _condition;
+    }
+
+    std::shared_ptr<Statement> WhileStatement::getBody() {
+        return _body;
+    }
+
+    std::size_t WhileStatement::getLParenIndex() {
+        return _lParenIndex;
+    }
+
+    std::size_t WhileStatement::getRParenIndex() {
+        return _rParenIndex;
+    }
+
+    void WhileStatement::setLParenIndex(std::size_t lParenIndex) {
+        _lParenIndex = lParenIndex;
+    }
+
+    void WhileStatement::setRParenIndex(std::size_t rParenIndex) {
+        _rParenIndex = rParenIndex;
     }
 
     DoWhileStatement::DoWhileStatement(std::size_t doTokenIndex,
@@ -562,6 +677,34 @@ namespace yuuki::compiler::feasy::syntax{
         return _switchTokenIndex;
     }
 
+    std::size_t SwitchStatement::getSwitchTokenIndex() {
+        return _switchTokenIndex;
+    }
+
+    std::size_t SwitchStatement::getLParenIndex() {
+        return _lParenIndex;
+    }
+
+    std::size_t SwitchStatement::getRParenIndex() {
+        return _rParenIndex;
+    }
+
+    std::shared_ptr<Expression> SwitchStatement::getValue() {
+        return _value;
+    }
+
+    std::shared_ptr<BlockStatement> SwitchStatement::getCases() {
+        return _cases;
+    }
+
+    void SwitchStatement::setLParenIndex(std::size_t lParenIndex) {
+        _lParenIndex = lParenIndex;
+    }
+
+    void SwitchStatement::setRParenIndex(std::size_t rParenIndex) {
+        _rParenIndex = rParenIndex;
+    }
+
     CaseStatement::CaseStatement(std::size_t caseTokenIndex,std::size_t colonTokenIndex,
                                  const std::shared_ptr<Expression>& value,
                                  const std::shared_ptr<BlockStatement>& caseBlock) {
@@ -621,6 +764,22 @@ namespace yuuki::compiler::feasy::syntax{
         return _caseTokenIndex;
     }
 
+    std::size_t CaseStatement::getCaseTokenIndex() {
+        return _caseTokenIndex;
+    }
+
+    std::size_t CaseStatement::getColonTokenIndex() {
+        return _colonTokenIndex;
+    }
+
+    std::shared_ptr<BlockStatement> CaseStatement::getCaseBlock() {
+        return _caseBlock;
+    }
+
+    std::shared_ptr<Expression> CaseStatement::getValue() {
+        return _value;
+    }
+
     DefaultStatement::DefaultStatement(std::size_t defaultTokenIndex,
                                                 std::size_t colonTokenIndex,
                                                 const std::shared_ptr<BlockStatement>& defaultBlock){
@@ -674,6 +833,17 @@ namespace yuuki::compiler::feasy::syntax{
 
     void VariableDeclarationStatement::setSemiTokenIndex(std::size_t semiTokenIndex){
         _semiTokenIndex = semiTokenIndex;
+    }
+
+    void
+    VariableDeclarationStatement::forEachVarDecl(const std::function<void(std::weak_ptr<SyntaxNode>, bool)> &syntaxWalker) {
+        for (std::size_t i = 0; i < _varDecls.size(); i++){
+            syntaxWalker(_varDecls[i], i == _varDecls.size() - 1);
+        }
+    }
+
+    std::shared_ptr<Type> VariableDeclarationStatement::getVariableType() {
+        return _type;
     }
 
     void

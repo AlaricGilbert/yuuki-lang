@@ -1,5 +1,5 @@
-#ifndef YUUKI_CODE_POSTION_H
-#define YUUKI_CODE_POSTION_H
+#ifndef YUUKI_CODE_POSITION_H
+#define YUUKI_CODE_POSITION_H
 
 #include <cstddef>
 namespace yuuki::compiler::feasy{
@@ -11,4 +11,4 @@ namespace yuuki::compiler::feasy{
         std::size_t offset;
     };
 }
-#endif //YUUKI_CODE_POSTION_H
+#endif //YUUKI_CODE_POSITION_H
